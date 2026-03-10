@@ -2,6 +2,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { SidebarInset, SidebarProvider, SidebarTrigger, } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/app-sidebar"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function Sidebar() {
   return (
@@ -31,6 +32,9 @@ export default function Sidebar() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
         <div className="flex flex-1" />
       </SidebarInset>

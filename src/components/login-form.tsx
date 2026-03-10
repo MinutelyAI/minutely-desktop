@@ -9,10 +9,9 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-
   const navigate = useNavigate()
 
-  const handleSubmission = (e) => {
+  const handleSubmission = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     localStorage.setItem("auth", "true")
     navigate("/dashboard")
