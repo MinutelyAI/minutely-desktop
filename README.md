@@ -6,3 +6,5 @@
 - Terms of service & privacy policy page
 
 ## Dashboard:
+- working bread crumbs
+- adding logo

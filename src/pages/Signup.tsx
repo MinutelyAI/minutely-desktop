@@ -1,7 +1,7 @@
-import { LoginForm } from "@/components/login-form"
+import { SignupForm } from "@/components/signup-form"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-export default function Login() {
+export default function Signup() {
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
       <div className="absolute top-6 right-6">
@@ -11,7 +11,7 @@ export default function Login() {
         <div className="flex items-center self-center text-lg tracking-tighter">
           Minut<span className="text-rose-600">e</span>ly<span className="text-rose-600">.</span>
         </div>
-        <LoginForm />
+        <SignupForm />
       </div>
     </div>
   )

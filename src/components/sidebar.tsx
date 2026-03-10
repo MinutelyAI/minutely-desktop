@@ -1,39 +1,167 @@
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, } from "@/components/ui/breadcrumb"
-import { SidebarInset, SidebarProvider, SidebarTrigger, } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { AppSidebar } from "@/components/app-sidebar"
+import { Calendar, NotepadText, Command, Plus as NewMeeting, MessageSquare, Users, Archive, Trash, Settings, } from "lucide-react"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, } from "@/components/ui/sidebar"
 
-export default function Sidebar() {
+import NavUser from "@/components/nav-user"
+import { Nav, User } from "@/types"
+
+const data: {
+  user: User
+  navMeeting: Nav[]
+  navChat: Nav[]
+  misc: Nav[]
+} = {
+  user: {
+    name: "John",
+    email: "jj@example.com",
+    avatar: "",
+  },
+  navMeeting: [
+    {
+      title: "Start a Meeting",
+      url: "/meetings/new",
+      icon: NewMeeting,
+    },
+    {
+      title: "Meeting Notes",
+      url: "/meetings/notes",
+      icon: NotepadText,
+    },
+    {
+      title: "Calendar",
+      url: "/meetings/calendar",
+      icon: Calendar,
+    },
+  ],
+  navChat: [
+    {
+      title: "Team Chat",
+      url: "/chat/team",
+      icon: MessageSquare,
+    },
+    {
+      title: "Groups",
+      url: "/chat/groups",
+      icon: Users,
+    },
+  ],
+  misc: [
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+    },
+    {
+      title: "Archive",
+      url: "/archive",
+      icon: Archive,
+    },
+    {
+      title: "Trash",
+      url: "/trash",
+      icon: Trash,
+    }
+  ],
+}
+
+export function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "350px",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
-          />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">All Inboxes</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Inbox</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </header>
-        <div className="flex flex-1" />
-      </SidebarInset>
-    </SidebarProvider>
-  );
+    <Sidebar variant="inset" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Command className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">
+                  Minut<span className="text-rose-400">e</span>ly
+                  <span className="text-rose-400">.</span>
+                </span>
+                <span className="truncate text-xs">Meeting Management</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <span className="truncate text-sm font-medium">Meetings</span>
+              </SidebarMenuButton>
+
+              <SidebarMenuSub>
+                {data.navMeeting.map((item) => (
+                  <SidebarMenuSubItem key={item.title}>
+                    <SidebarMenuSubButton href={item.url}>
+                      <item.icon />
+                      <span className="truncate text-sm font-medium">
+                        {item.title}
+                      </span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <span className="truncate text-sm font-medium">Chat</span>
+              </SidebarMenuButton>
+
+              <SidebarMenuSub>
+                {data.navChat.map((item) => (
+                  <SidebarMenuSubItem key={item.title}>
+                    <SidebarMenuSubButton href={item.url}>
+                      <item.icon />
+                      <span className="truncate text-sm font-medium">
+                        {item.title}
+                      </span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <span className="truncate text-sm font-medium">Misc</span>
+              </SidebarMenuButton>
+
+              <SidebarMenuSub>
+                {data.misc.map((item) => (
+                  <SidebarMenuSubItem key={item.title}>
+                    <SidebarMenuSubButton href={item.url}>
+                      <item.icon />
+                      <span className="truncate text-sm font-medium">
+                        {item.title}
+                      </span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+      </SidebarContent>
+
+      <SidebarFooter>
+        <NavUser user={data.user} />
+      </SidebarFooter>
+    </Sidebar>
+  )
 }
