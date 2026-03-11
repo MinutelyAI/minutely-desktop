@@ -3,6 +3,7 @@ import LoginPage from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import ProtectedRoute from "@/components/protected-routes";
 import SignupPage from "./pages/Signup";
+import ProtectedLayout from "@/components/protected-layout";
 
 export default function App() {
   const isLoggedIn = localStorage.getItem("auth") === "true";
@@ -28,14 +29,11 @@ export default function App() {
       <Route path="/dashboard" element={
         <Navigate to={defaultDashboardRoute} replace /> } />
 
-      <Route
-        path="/dashboard/:sectionId"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard/:sectionId" element={<Dashboard />} />
+        </Route>
+      </Route>
     </Routes>
   );
 }
