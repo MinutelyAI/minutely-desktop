@@ -4,18 +4,17 @@ import Dashboard from "@/pages/Dashboard";
 import ProtectedRoute from "@/components/protected-routes";
 import SignupPage from "./pages/Signup";
 import ProtectedLayout from "@/components/protected-layout";
+import StartMeetingPage from "@/pages/meetings/start-meeting";
+import MeetingNotesPage from "@/pages/meetings/meeting-notes";
+import CalenderPage from "@/pages/meetings/calender";
+import MeetingsPage from "@/pages/meetings/meetings";
 
 export default function App() {
   const isLoggedIn = localStorage.getItem("auth") === "true";
-  const defaultDashboardRoute = "/dashboard/meetings"
+  const defaultDashboardRoute = "/meetings";
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={<Navigate to={isLoggedIn ? defaultDashboardRoute : "/login"} replace />}
-      />
-
       <Route
         path="/login"
         element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <LoginPage />}
@@ -26,12 +25,21 @@ export default function App() {
         element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <SignupPage />}
       />
 
-      <Route path="/dashboard" element={
-        <Navigate to={defaultDashboardRoute} replace /> } />
+      <Route
+        path="/dashboard"
+        element={<Navigate to={defaultDashboardRoute} replace />}
+      />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<ProtectedLayout />}>
-          <Route path="/dashboard/:sectionId" element={<Dashboard />} />
+          <Route path="/" element={<Dashboard />}>
+            <Route index element={<Navigate to="/meetings" replace />} />
+            <Route path="meetings" element={<MeetingsPage />}>
+              <Route path="start-meetings" element={<StartMeetingPage />} />
+              <Route path="meetings-notes" element={<MeetingNotesPage />} />
+              <Route path="calender" element={<CalenderPage />} />
+            </Route>
+          </Route>
         </Route>
       </Route>
     </Routes>
