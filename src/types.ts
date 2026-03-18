@@ -1,3 +1,15 @@
+export type StartMeetingSheetProps = {
+  meetingTitle: string;
+  micEnabled: boolean;
+  videoEnabled: boolean;
+  AITranscriptionEnabled: boolean;
+  AINotesEnabled: boolean;
+
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
+
 export type Nav = {
   title: string
   url?: string
