@@ -6,6 +6,7 @@ import SignupPage from "./pages/Signup";
 import ProtectedLayout from "@/components/protected-layout";
 import StartMeetingPage from "@/pages/meetings/start-meeting";
 import MeetingNotesPage from "@/pages/meetings/meeting-notes";
+import MeetingNoteDetailPage from "@/pages/meetings/meeting-note-detail";
 import CalenderPage from "@/pages/meetings/calender";
 import MeetingsPage from "@/pages/meetings/meetings";
 
@@ -36,7 +37,9 @@ export default function App() {
             <Route index element={<Navigate to="/meetings" replace />} />
             <Route path="meetings" element={<MeetingsPage />}>
               <Route path="start-meetings" element={<StartMeetingPage />} />
-              <Route path="meetings-notes" element={<MeetingNotesPage />} />
+              <Route path="meetings-notes" element={<MeetingNotesPage />}>
+                <Route path=":noteId" element={<MeetingNoteDetailPage />} />
+              </Route>
               <Route path="calender" element={<CalenderPage />} />
             </Route>
           </Route>

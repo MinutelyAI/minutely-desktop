@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
+import { meetingNotes } from "@/mock"
 
 import { AppSidebar as Sidebar } from "@/components/sidebar"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, } from "@/components/ui/breadcrumb"
@@ -14,6 +15,19 @@ export default function ProtectedLayout() {
 
   const { pathname } = useLocation()
   const breadcrumbs = (() => {
+    const meetingNoteMatch = pathname.match(/^\/meetings\/meetings-notes\/([^/]+)$/)
+    if (meetingNoteMatch) {
+      const currentNote = meetingNotes.find(
+        (note) => String(note.id) === meetingNoteMatch[1]
+      )
+
+      return [
+        { label: "Meetings", to: "/meetings" },
+        { label: "Meeting Notes", to: "/meetings/meetings-notes" },
+        { label: currentNote?.title ?? "Note" },
+      ]
+    }
+
     switch (pathname) {
       case "/":
         return []
