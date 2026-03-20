@@ -47,6 +47,9 @@ export default function StartMeetingSheet({
   open,
   onOpenChange,
 }: StartMeetingSheetProps) {
+
+  const noParticipants = () => participants.length < 0
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
@@ -182,34 +185,20 @@ export default function StartMeetingSheet({
           <div className="grid gap-3">
             <Label>Participants</Label>
             <p className="text-sm text-muted-foreground">
-              {participants.length} participant{participants.length === 1 ? "" : "s"} added from the setup card.
+              {participants.length === 0
+                ? "No participants added. You can add participants after starting the meeting."
+                : `${participants.length} participant${participants.length === 1 ? "" : "s"} added.`}
             </p>
-            {participants.length > 0 ? (
-              <div className="grid gap-2">
-                {participants.map((participant: MeetingParticipant) => (
-                  <div
-                    key={participant.id}
-                    className="rounded-lg border px-3 py-2 text-sm"
-                  >
-                    <div>{participant.displayName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {participant.email}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Add participants from the meeting setup card before starting.
-              </p>
-            )}
           </div>
         </div>
+
         <Separator />
+
         <SheetFooter>
-          <Button type="button">Start Now</Button>
+          <Button disabled={participants.length === 0} type="button">Start Now</Button>
           <SheetClose render={<Button variant="outline">Cancel</Button>} />
         </SheetFooter>
+
       </SheetContent>
     </Sheet>
   );

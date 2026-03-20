@@ -1,4 +1,4 @@
-import { MeetingParticipant } from "@/types";
+import { MeetingParticipant, MeetingNotes } from "@/types";
 
 export const availableParticipants: MeetingParticipant[] = [
   {
@@ -50,3 +50,7 @@ export const availableParticipants: MeetingParticipant[] = [
     username: "mia_cooper",
   },
 ];
+
+// export const meetingNotes: MeetingNotes = {
+//
+// }

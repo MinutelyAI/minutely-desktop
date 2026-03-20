@@ -270,17 +270,16 @@ export default function StartMeetingPage() {
                     {selectedParticipants.map((participant) => (
                       <div
                         key={participant.id}
-                        className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-sm"
+                        className="flex items-center gap-1 rounded-full border bg-background pl-3 pr-1 py-1 text-sm"
                       >
-                        <span>{participant.email}</span>
-                        <button
-                          type="button"
-                          aria-label={`Remove ${participant.email}`}
-                          className="text-muted-foreground transition hover:text-foreground"
+                        <span>{participant.displayName}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
                           onClick={() => removeParticipant(participant.id)}
                         >
-                          <X className="h-4 w-4" />
-                        </button>
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        </Button>
                       </div>
                     ))}
                   </div>

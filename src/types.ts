@@ -23,6 +23,15 @@ export type StartMeetingSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+export type Meeting = {
+
+}
+
+export type MeetingNotes = {
+  tags: string[],
+  title: string,
+  meeting: Meeting,
+}
 
 export type Nav = {
   title: string
