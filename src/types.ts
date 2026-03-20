@@ -24,13 +24,40 @@ export type StartMeetingSheetProps = {
 };
 
 export type Meeting = {
+  id: number
+  title: string
+  dateLabel: string
+  timeRange: string
+  duration: string
+  location: string
+  organizer: string
+  participants: MeetingParticipant[]
+  summary: string
+}
 
+export type MeetingNoteSection = {
+  title: string
+  items: string[]
+}
+
+export type MeetingActionItem = {
+  id: number
+  title: string
+  owner: string
+  dueDate: string
+  status: "open" | "completed"
 }
 
 export type MeetingNotes = {
-  tags: string[],
-  title: string,
-  meeting: Meeting,
+  id: number
+  title: string
+  tags: string[]
+  category: "Internal" | "Client" | "Leadership"
+  meeting: Meeting
+  sections: MeetingNoteSection[]
+  actionItems: MeetingActionItem[]
+  decisions: string[]
+  highlights: string[]
 }
 
 export type Nav = {
