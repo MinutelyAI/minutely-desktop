@@ -1,4 +1,5 @@
 import { Calendar, NotepadText, Command, Plus as NewMeeting, MessageSquare, Users, Archive, Trash, Settings, } from "lucide-react"
+import { Link } from "react-router-dom"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, } from "@/components/ui/sidebar"
 
 import NavUser from "@/components/nav-user"
@@ -18,17 +19,17 @@ const data: {
   navMeeting: [
     {
       title: "Start a Meeting",
-      url: "/meetings/new",
+      url: "/meetings/start-meetings",
       icon: NewMeeting,
     },
     {
       title: "Meeting Notes",
-      url: "/meetings/notes",
+      url: "/meetings/meetings-notes",
       icon: NotepadText,
     },
     {
       title: "Calendar",
-      url: "/meetings/calendar",
+      url: "/meetings/calender",
       icon: Calendar,
     },
   ],
@@ -91,14 +92,14 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>
+              <SidebarMenuButton render={<Link to="/meetings" />}>
                 <span className="truncate text-sm font-medium">Meetings</span>
               </SidebarMenuButton>
 
               <SidebarMenuSub>
                 {data.navMeeting.map((item) => (
                   <SidebarMenuSubItem key={item.title}>
-                    <SidebarMenuSubButton href={item.url}>
+                    <SidebarMenuSubButton render={<Link to={item.url} />}>
                       <item.icon />
                       <span className="truncate text-sm font-medium">
                         {item.title}
@@ -121,7 +122,7 @@ export function AppSidebar({
               <SidebarMenuSub>
                 {data.navChat.map((item) => (
                   <SidebarMenuSubItem key={item.title}>
-                    <SidebarMenuSubButton href={item.url}>
+                    <SidebarMenuSubButton render={<Link to={item.url} />}>
                       <item.icon />
                       <span className="truncate text-sm font-medium">
                         {item.title}
@@ -144,7 +145,7 @@ export function AppSidebar({
               <SidebarMenuSub>
                 {data.misc.map((item) => (
                   <SidebarMenuSubItem key={item.title}>
-                    <SidebarMenuSubButton href={item.url}>
+                    <SidebarMenuSubButton render={<Link to={item.url} />}>
                       <item.icon />
                       <span className="truncate text-sm font-medium">
                         {item.title}

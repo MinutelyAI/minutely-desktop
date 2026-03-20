@@ -1,0 +1,205 @@
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { MeetingParticipant, StartMeetingSheetProps } from "@/types";
+import { Toggle } from "../ui/toggle";
+import {
+  MicrophoneIcon as Microphone,
+  MicrophoneSlashIcon as MicrophoneOff,
+  VideoCameraIcon as Video,
+  VideoCameraSlashIcon as VideoOff,
+  SubtitlesIcon as AITranscription,
+  SubtitlesSlashIcon as AITranscriptionOff,
+  PencilSimpleSlashIcon as AINotesOff,
+  PencilSimpleIcon as AINotes,
+} from "@phosphor-icons/react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Separator } from "../ui/separator";
+
+export default function StartMeetingSheet({
+  meetingTitle,
+  onMeetingTitleChange,
+  quickNote,
+  onQuickNoteChange,
+  micEnabled,
+  onMicEnabledChange,
+  videoEnabled,
+  onVideoEnabledChange,
+  AINotesEnabled,
+  onAINotesEnabledChange,
+  AITranscriptionEnabled,
+  onAITranscriptionEnabledChange,
+  isScheduled,
+  onIsScheduledChange,
+  scheduledDate,
+  onScheduledDateChange,
+  scheduledTime,
+  onScheduledTimeChange,
+  participants,
+
+  open,
+  onOpenChange,
+}: StartMeetingSheetProps) {
+
+  const noParticipants = () => participants.length < 0
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Start Meeting</SheetTitle>
+          <SheetDescription>
+            Review the meeting details before starting now.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid flex-1 auto-rows-min gap-6 px-4">
+          <div className="grid gap-3">
+            <Label htmlFor="start-meeting-title">Meeting title</Label>
+            <Input
+              id="start-meeting-title"
+              placeholder="Enter meeting title"
+              value={meetingTitle}
+              onChange={(e) => onMeetingTitleChange(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="start-meeting-notes">Quick note</Label>
+            <Textarea
+              id="start-meeting-notes"
+              placeholder="Agenda or context"
+              value={quickNote}
+              onChange={(e) => onQuickNoteChange(e.target.value)}
+            />
+          </div>
+          <Separator />
+          <Label>Meeting Settings</Label>
+
+          <TooltipProvider>
+            <div className="flex items-center gap-3">
+              <Tooltip>
+                <TooltipTrigger>
+                  <Toggle
+                    variant="outline"
+                    pressed={micEnabled}
+                    onPressedChange={onMicEnabledChange}
+                  >
+                    {micEnabled ? <Microphone /> : <MicrophoneOff />}
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{micEnabled ? "Turn microphone off" : "Turn microphone on"}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger>
+                  <Toggle
+                    variant="outline"
+                    pressed={videoEnabled}
+                    onPressedChange={onVideoEnabledChange}
+                  >
+                    {videoEnabled ? <Video /> : <VideoOff />}
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{videoEnabled ? "Turn video off" : "Turn video on"}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger>
+                  <Toggle
+                    variant="outline"
+                    pressed={AITranscriptionEnabled}
+                    onPressedChange={onAITranscriptionEnabledChange}
+                  >
+                    {AITranscriptionEnabled ? <AITranscription /> : <AITranscriptionOff />}
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {AITranscriptionEnabled
+                      ? "Disable AI transcription"
+                      : "Enable AI transcription"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger >
+                  <Toggle
+                    variant="outline"
+                    pressed={AINotesEnabled}
+                    onPressedChange={onAINotesEnabledChange}
+                  >
+                    {AINotesEnabled ? <AINotes /> : <AINotesOff />}
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{AINotesEnabled ? "Disable AI notes" : "Enable AI notes"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+
+          <Separator />
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between">
+              <Label>Schedule</Label>
+              <Toggle
+                variant="outline"
+                pressed={isScheduled}
+                onPressedChange={onIsScheduledChange}
+              >
+                {isScheduled ? "Scheduled" : "Start Now"}
+              </Toggle>
+            </div>
+            {isScheduled ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                <Input
+                  type="date"
+                  value={scheduledDate}
+                  onChange={(e) => onScheduledDateChange(e.target.value)}
+                />
+                <Input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => onScheduledTimeChange(e.target.value)}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                The meeting will start as soon as you confirm.
+              </p>
+            )}
+          </div>
+
+          <Separator />
+          <div className="grid gap-3">
+            <Label>Participants</Label>
+            <p className="text-sm text-muted-foreground">
+              {participants.length === 0
+                ? "No participants added. You can add participants after starting the meeting."
+                : `${participants.length} participant${participants.length === 1 ? "" : "s"} added.`}
+            </p>
+          </div>
+        </div>
+
+        <Separator />
+
+        <SheetFooter>
+          <Button disabled={participants.length === 0} type="button">Start Now</Button>
+          <SheetClose render={<Button variant="outline">Cancel</Button>} />
+        </SheetFooter>
+
+      </SheetContent>
+    </Sheet>
+  );
+}
