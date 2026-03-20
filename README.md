@@ -8,3 +8,8 @@
 ## Dashboard:
 - working bread crumbs
 - adding logo
+
+## Start Meeting:
+- Implement join a meeting
+- Implement Starting or scheduling a meeting
+- Upcomming meeting is all mock
