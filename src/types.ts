@@ -84,3 +84,12 @@ export type MeetingParticipant = {
   email: string
   username: string
 }
+
+export type NotificationItem = {
+  id: number
+  title: string
+  description: string
+  timeLabel: string
+  unread: boolean
+  tone: "info" | "success" | "warning"
+}

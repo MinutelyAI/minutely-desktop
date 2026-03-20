@@ -1,4 +1,4 @@
-import { MeetingParticipant, MeetingNotes } from "@/types";
+import { MeetingParticipant, MeetingNotes, NotificationItem } from "@/types";
 
 export const availableParticipants: MeetingParticipant[] = [
   {
@@ -243,5 +243,40 @@ export const meetingNotes: MeetingNotes[] = [
         status: "completed",
       },
     ],
+  },
+];
+
+export const notifications: NotificationItem[] = [
+  {
+    id: 1,
+    title: "Reminder scheduled",
+    description: "Your reminder for Q2 Product Planning Sync is set for 30 minutes before start.",
+    timeLabel: "2 min ago",
+    unread: true,
+    tone: "success",
+  },
+  {
+    id: 2,
+    title: "Notes ready",
+    description: "AI notes for Design Critique: Notes Workspace are ready to review.",
+    timeLabel: "18 min ago",
+    unread: true,
+    tone: "info",
+  },
+  {
+    id: 3,
+    title: "Action item updated",
+    description: "James Walker completed the SSO follow-up from Enterprise Customer Review.",
+    timeLabel: "1 hour ago",
+    unread: false,
+    tone: "warning",
+  },
+  {
+    id: 4,
+    title: "Meeting starting soon",
+    description: "Enterprise Customer Review begins in 15 minutes.",
+    timeLabel: "Today",
+    unread: true,
+    tone: "warning",
   },
 ];
