@@ -48,6 +48,16 @@ export default function ProtectedLayout() {
           { label: "Meetings", to: "/meetings" },
           { label: "Calendar" },
         ]
+      case "/chat/team":
+        return [
+          { label: "Chat" },
+          { label: "Team Chat" },
+        ]
+      case "/chat/groups":
+        return [
+          { label: "Chat" },
+          { label: "Groups" },
+        ]
       default:
         return []
     }
