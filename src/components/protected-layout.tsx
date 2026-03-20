@@ -85,14 +85,16 @@ export default function ProtectedLayout() {
           { label: "Meetings", to: "/meetings" },
           { label: "Calendar" },
         ]
+      case "/chat":
+        return [{ label: "Chat" }]
       case "/chat/team":
         return [
-          { label: "Chat" },
+          { label: "Chat", to: "/chat" },
           { label: "Team Chat" },
         ]
       case "/chat/groups":
         return [
-          { label: "Chat" },
+          { label: "Chat", to: "/chat" },
           { label: "Groups" },
         ]
       default:

@@ -115,7 +115,7 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>
+              <SidebarMenuButton render={<Link to="/chat" />}>
                 <span className="truncate text-sm font-medium">Chat</span>
               </SidebarMenuButton>
 
