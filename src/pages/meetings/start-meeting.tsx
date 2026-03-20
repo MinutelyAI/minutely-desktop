@@ -270,7 +270,7 @@ export default function StartMeetingPage() {
                     {selectedParticipants.map((participant) => (
                       <div
                         key={participant.id}
-                        className="flex items-center gap-1 rounded-full border bg-background pl-3 pr-1 py-1 text-sm"
+                        className="flex items-center gap-2 rounded-full border bg-background pl-3 pr-1 py-1 text-sm"
                       >
                         <span>{participant.displayName}</span>
                         <Button

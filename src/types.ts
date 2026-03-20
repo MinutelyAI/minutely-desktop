@@ -45,6 +45,7 @@ export type MeetingActionItem = {
   title: string
   owner: string
   dueDate: string
+  completed: boolean
   status: "open" | "completed"
 }
 

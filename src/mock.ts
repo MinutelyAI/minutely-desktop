@@ -107,6 +107,7 @@ export const meetingNotes: MeetingNotes[] = [
         title: "Prepare launch messaging draft",
         owner: "Olivia Bennett",
         dueDate: "Apr 03",
+        completed: false,
         status: "open",
       },
       {
@@ -114,6 +115,7 @@ export const meetingNotes: MeetingNotes[] = [
         title: "Confirm engineering estimate for meeting templates",
         owner: "Liam Parker",
         dueDate: "Mar 24",
+        completed: true,
         status: "completed",
       },
     ],
@@ -164,6 +166,7 @@ export const meetingNotes: MeetingNotes[] = [
         title: "Revise note card hierarchy",
         owner: "Sophia Reed",
         dueDate: "Mar 22",
+        completed: false,
         status: "open",
       },
       {
@@ -171,6 +174,7 @@ export const meetingNotes: MeetingNotes[] = [
         title: "Validate compact layout with PM team",
         owner: "Chloe Morgan",
         dueDate: "Mar 21",
+        completed: false,
         status: "open",
       },
     ],
@@ -227,6 +231,7 @@ export const meetingNotes: MeetingNotes[] = [
         title: "Draft phased rollout response",
         owner: "Daniel Ross",
         dueDate: "Mar 25",
+        completed: false,
         status: "open",
       },
       {
@@ -234,6 +239,7 @@ export const meetingNotes: MeetingNotes[] = [
         title: "Document SSO requirement for sales follow-up",
         owner: "James Walker",
         dueDate: "Mar 20",
+        completed: true,
         status: "completed",
       },
     ],
