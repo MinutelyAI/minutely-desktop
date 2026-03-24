@@ -9,6 +9,9 @@ import MeetingNotesPage from "@/pages/meetings/meeting-notes";
 import MeetingNoteDetailPage from "@/pages/meetings/meeting-note-detail";
 import CalenderPage from "@/pages/meetings/calender";
 import MeetingsPage from "@/pages/meetings/meetings";
+import ChatPage from "@/pages/chat/chat";
+import TeamChatPage from "@/pages/chat/team";
+import GroupsChatPage from "@/pages/chat/groups";
 
 export default function App() {
   const isLoggedIn = localStorage.getItem("auth") === "true";
@@ -41,6 +44,10 @@ export default function App() {
                 <Route path=":noteId" element={<MeetingNoteDetailPage />} />
               </Route>
               <Route path="calender" element={<CalenderPage />} />
+            </Route>
+            <Route path="chat" element={<ChatPage />}>
+              <Route path="team" element={<TeamChatPage />} />
+              <Route path="groups" element={<GroupsChatPage />} />
             </Route>
           </Route>
         </Route>
