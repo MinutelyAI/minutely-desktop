@@ -101,7 +101,7 @@ function buildCalendarDays(month: Date) {
 
 export default function CalenderPage() {
   const [displayMonth, setDisplayMonth] = useState(getInitialMonth);
-  const [selectedMeeting, setSelectedMeeting] = useState<MeetingNotes | null>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<(MeetingNotes | (ScheduledMeeting & { type: 'scheduled' })) | null>(null);
   const [reminderOffset, setReminderOffset] = useState("30 minutes");
   const [reminderNote, setReminderNote] = useState("");
 
