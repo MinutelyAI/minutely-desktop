@@ -2,6 +2,9 @@ import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles, } from 
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar, } from "@/components/ui/sidebar"
+import { useNavigate } from "react-router-dom"
+
+const API_URL = import.meta.env.VITE_BACKEND;
 
 export default function NavUser({
   user,
@@ -13,6 +16,31 @@ export default function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+
+  let navigate = useNavigate();
+
+  const handleLogout = async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!res.ok) {
+      const text = await res.text()
+      console.error("Logout error response:", text)
+      return
+    }
+
+    navigate("/login")
+  } catch (error) {
+    console.error("Logout error:", error)
+  }
+}
+  
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -78,7 +106,7 @@ export default function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem >
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>
