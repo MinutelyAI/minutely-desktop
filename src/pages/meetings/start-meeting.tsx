@@ -41,7 +41,7 @@ import { useMeeting } from "@/contexts/meeting-context";
 
 export default function StartMeetingPage() {
   const navigate = useNavigate();
-  const { createMeeting } = useMeeting();
+  const { createMeeting, scheduleMeeting } = useMeeting();
 
   const [meetingTitle, setMeetingTitle] = useState("");
   const [quickNote, setQuickNote] = useState("");
@@ -138,6 +138,43 @@ export default function StartMeetingPage() {
       return;
     }
 
+    if (isScheduled) {
+      if (!scheduledDate || !scheduledTime) {
+        alert("Please choose a date and time for a scheduled meeting.");
+        return;
+      }
+
+      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
+      scheduleMeeting({
+        id: Date.now(),
+        title: meetingTitle.trim(),
+        category: "Internal",
+        scheduledAt,
+        meeting: {
+          id: Date.now(),
+          title: meetingTitle.trim(),
+          dateLabel: scheduledAt.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            weekday: "short",
+          }),
+          timeRange: scheduledAt.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+          duration: "30 min",
+          location: "Virtual",
+          organizer: "You",
+          participants: selectedParticipants,
+          summary: quickNote,
+        },
+      });
+
+      setOpenStartMeeting(false);
+      navigate("/meetings/calender");
+      return;
+    }
+
     const meetingCode = generateMeetingCode();
     const meetingId = generateMeetingId();
 
@@ -155,10 +192,7 @@ export default function StartMeetingPage() {
       },
       quickNote: quickNote,
       startTime: new Date(),
-      isScheduled: isScheduled,
-      scheduledStartTime: isScheduled && scheduledDate && scheduledTime
-        ? new Date(`${scheduledDate}T${scheduledTime}`)
-        : undefined,
+      isScheduled: false,
       status: "active",
     };
 
@@ -257,21 +291,21 @@ export default function StartMeetingPage() {
 
             <div className="grid gap-3 rounded-xl border bg-muted/20 p-4">
               <div className="flex items-center justify-between gap-3">
-                <Label className="text-sm">Schedule</Label>
+                <Label className="text-sm">Meeting type</Label>
                 <Toggle variant="outline" pressed={isScheduled} onPressedChange={setIsScheduled} >
                   <CalendarClock className="h-4 w-4" />
-                  {isScheduled ? "StartNow" : "Schedule"}
+                  {isScheduled ? "Scheduled" : "Instant"}
                 </Toggle>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="meeting-date">Date</Label>
-                  <Input id="meeting-date" disabled={isScheduled} type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
+                  <Input id="meeting-date" disabled={!isScheduled} type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="meeting-time">Time</Label>
-                  <Input id="meeting-time" disabled={isScheduled} type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+                  <Input id="meeting-time" disabled={!isScheduled} type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
                 </div>
               </div>
             </div>
@@ -375,10 +409,10 @@ export default function StartMeetingPage() {
                     Start Time
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {!isScheduled
+                    {isScheduled
                       ? scheduledDate && scheduledTime
                         ? `${scheduledDate} at ${scheduledTime}`
-                        : "Schedule date and time before confirming."
+                        : "Pick a date and time before scheduling."
                       : "This meeting starts immediately when you confirm from the sheet."}
                   </p>
                 </div>
@@ -409,7 +443,7 @@ export default function StartMeetingPage() {
             <Separator className="mt-6" />
 
             <Button className="w-full" onClick={handleCreateMeeting}>
-              Start Meeting Now
+              {isScheduled ? "Schedule Meeting" : "Start Instant Meeting"}
               <ArrowRight />
             </Button>
           </CardContent>

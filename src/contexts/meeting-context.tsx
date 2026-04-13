@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ActiveMeeting } from '@/types';
+import { ActiveMeeting, ScheduledMeeting } from '@/types';
 
 type MeetingContextType = {
   activeMeeting: ActiveMeeting | null;
+  scheduledMeetings: ScheduledMeeting[];
   createMeeting: (meeting: ActiveMeeting) => void;
+  scheduleMeeting: (meeting: ScheduledMeeting) => void;
   endMeeting: (forAll: boolean) => void;
   updateMeeting: (updates: Partial<ActiveMeeting>) => void;
 };
@@ -12,9 +14,14 @@ const MeetingContext = createContext<MeetingContextType | undefined>(undefined);
 
 export function MeetingProvider({ children }: { children: ReactNode }) {
   const [activeMeeting, setActiveMeeting] = useState<ActiveMeeting | null>(null);
+  const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>([]);
 
   const createMeeting = (meeting: ActiveMeeting) => {
     setActiveMeeting(meeting);
+  };
+
+  const scheduleMeeting = (meeting: ScheduledMeeting) => {
+    setScheduledMeetings((current) => [...current, meeting]);
   };
 
   const endMeeting = (forAll: boolean) => {
@@ -37,7 +44,14 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <MeetingContext.Provider value={{ activeMeeting, createMeeting, endMeeting, updateMeeting }}>
+    <MeetingContext.Provider value={{
+      activeMeeting,
+      scheduledMeetings,
+      createMeeting,
+      scheduleMeeting,
+      endMeeting,
+      updateMeeting,
+    }}>
       {children}
     </MeetingContext.Provider>
   );

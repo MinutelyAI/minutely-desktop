@@ -35,6 +35,14 @@ export type Meeting = {
   summary: string
 }
 
+export type ScheduledMeeting = {
+  id: number
+  title: string
+  category: "Internal" | "Client" | "Leadership"
+  meeting: Meeting
+  scheduledAt: Date
+}
+
 export type MeetingNoteSection = {
   title: string
   items: string[]

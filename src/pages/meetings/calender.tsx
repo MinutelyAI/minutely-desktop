@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { meetingNotes } from "@/mock";
+import { useMeeting } from "@/contexts/meeting-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardTitle } from "@/components/ui/card";
@@ -20,7 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { MeetingNotes } from "@/types";
+import { MeetingNotes, ScheduledMeeting } from "@/types";
 import { BellAlertIcon } from "@heroicons/react/24/outline";
 import {
   Dialog,
@@ -38,25 +39,24 @@ import { Textarea } from "@/components/ui/textarea";
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const reminderOptions = ["10 minutes", "30 minutes", "1 hour", "1 day"];
 
-const scheduledMeetings = meetingNotes
-  .map((note) => ({
-    ...note,
-    scheduledAt: new Date(note.meeting.dateLabel),
+function getScheduledMeetings(mockNotes: MeetingNotes[], extra: ScheduledMeeting[]) {
+  const mockScheduled = mockNotes
+    .map((note) => ({
+      ...note,
+      scheduledAt: new Date(note.meeting.dateLabel),
+    }))
+
+  const extraScheduled = extra.map((meeting) => ({
+    ...meeting,
+    type: "scheduled" as const,
   }))
-  .sort((left, right) => left.scheduledAt.getTime() - right.scheduledAt.getTime());
+
+  return [...mockScheduled, ...extraScheduled].sort((left, right) => left.scheduledAt.getTime() - right.scheduledAt.getTime())
+}
 
 function getInitialMonth() {
-  const firstScheduledMeeting = scheduledMeetings[0];
-  if (!firstScheduledMeeting) {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  }
-
-  return new Date(
-    firstScheduledMeeting.scheduledAt.getFullYear(),
-    firstScheduledMeeting.scheduledAt.getMonth(),
-    1
-  );
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), 1);
 }
 
 function isSameMonth(date: Date, month: Date) {
@@ -100,7 +100,10 @@ function buildCalendarDays(month: Date) {
 }
 
 export default function CalenderPage() {
-  const [displayMonth, setDisplayMonth] = useState(getInitialMonth);
+  const { scheduledMeetings: scheduledMeetingsFromContext } = useMeeting();
+  const scheduledMeetings = getScheduledMeetings(meetingNotes, scheduledMeetingsFromContext);
+
+  const [displayMonth, setDisplayMonth] = useState(() => getInitialMonth());
   const [selectedMeeting, setSelectedMeeting] = useState<(MeetingNotes | (ScheduledMeeting & { type: 'scheduled' })) | null>(null);
   const [reminderOffset, setReminderOffset] = useState("30 minutes");
   const [reminderNote, setReminderNote] = useState("");

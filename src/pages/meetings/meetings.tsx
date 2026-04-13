@@ -1,4 +1,5 @@
 import { Link, useOutlet } from "react-router-dom"
+import { useState } from "react"
 import {
   ArrowRight,
   CalendarDays,
@@ -7,11 +8,17 @@ import {
   MapPin,
   Sparkles,
   Users,
+  X,
 } from "lucide-react"
 
 import { meetingNotes } from "@/mock"
+import { useMeeting } from "@/contexts/meeting-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Separator } from "@/components/ui/separator"
 import {
   Card,
   CardContent,
@@ -52,6 +59,17 @@ const upcomingMeetings = [
 
 export default function MeetingsPage() {
   const outlet = useOutlet()
+  const { scheduleMeeting } = useMeeting()
+
+  const [scheduleTitle, setScheduleTitle] = useState("")
+  const [scheduleDescription, setScheduleDescription] = useState("")
+  const [scheduleDate, setScheduleDate] = useState("")
+  const [scheduleTime, setScheduleTime] = useState("")
+  const [inviteeEmail, setInviteeEmail] = useState("")
+  const [invitees, setInvitees] = useState<string[]>([])
+  const [scheduleError, setScheduleError] = useState("")
+  const [scheduleSuccess, setScheduleSuccess] = useState("")
+
   const totalActionItems = meetingNotes.reduce(
     (count, note) => count + note.actionItems.length,
     0
@@ -60,6 +78,88 @@ export default function MeetingsPage() {
     (count, note) => count + note.actionItems.filter((item) => !item.completed).length,
     0
   )
+  const addInvitee = () => {
+    const email = inviteeEmail.trim().toLowerCase()
+
+    if (!email) {
+      setScheduleError("Enter an invitee email before adding.")
+      return
+    }
+
+    if (!email.includes("@")) {
+      setScheduleError("Enter a valid email address.")
+      return
+    }
+
+    if (invitees.includes(email)) {
+      setScheduleError("That invitee has already been added.")
+      return
+    }
+
+    setInvitees((current) => [...current, email])
+    setInviteeEmail("")
+    setScheduleError("")
+  }
+
+  const removeInvitee = (email: string) => {
+    setInvitees((current) => current.filter((item) => item !== email))
+    setScheduleError("")
+  }
+
+  const handleScheduleMeeting = () => {
+    if (!scheduleTitle.trim() || !scheduleDescription.trim() || !scheduleDate || !scheduleTime) {
+      setScheduleError("Please complete title, description, date, and time.")
+      setScheduleSuccess("")
+      return
+    }
+
+    if (invitees.length === 0) {
+      setScheduleError("Add at least one invitee before scheduling.")
+      setScheduleSuccess("")
+      return
+    }
+
+    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`)
+
+    scheduleMeeting({
+      id: Date.now(),
+      title: scheduleTitle.trim(),
+      category: "Internal",
+      scheduledAt,
+      meeting: {
+        id: Date.now(),
+        title: scheduleTitle.trim(),
+        dateLabel: scheduledAt.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          weekday: "short",
+        }),
+        timeRange: scheduledAt.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+        duration: "30 min",
+        location: "Virtual",
+        organizer: "You",
+        participants: invitees.map((email, index) => ({
+          id: Date.now() + index,
+          displayName: email.split("@")[0],
+          email,
+          username: email.split("@")[0],
+        })),
+        summary: scheduleDescription.trim(),
+      },
+    })
+
+    setScheduleSuccess("Meeting scheduled successfully.")
+    setScheduleError("")
+    setScheduleTitle("")
+    setScheduleDescription("")
+    setScheduleDate("")
+    setScheduleTime("")
+    setInvitees([])
+  }
+
   const latestNotes = [...meetingNotes].slice(0, 3)
 
   return outlet ?? (
@@ -82,7 +182,7 @@ export default function MeetingsPage() {
               <div className="flex flex-wrap gap-2">
                 <Button asChild>
                   <Link to="/meetings/start-meetings">
-                    Start a meeting
+                    Start instant meeting
                     <ArrowRight />
                   </Link>
                 </Button>
@@ -136,11 +236,104 @@ export default function MeetingsPage() {
                 {item}
               </div>
             ))}
+
+            <Separator />
+
+            <div className="space-y-4">
+              <div>
+                <CardTitle className="text-base">Schedule meeting</CardTitle>
+                <CardDescription>Book a meeting time that appears on the calendar.</CardDescription>
+              </div>
+
+              <div className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="schedule-title">Title</Label>
+                  <Input
+                    id="schedule-title"
+                    placeholder="Meeting title"
+                    value={scheduleTitle}
+                    onChange={(e) => setScheduleTitle(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="schedule-description">Description</Label>
+                  <Textarea
+                    id="schedule-description"
+                    placeholder="Meeting description"
+                    value={scheduleDescription}
+                    onChange={(e) => setScheduleDescription(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="schedule-date">Date</Label>
+                    <Input
+                      id="schedule-date"
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="schedule-time">Time</Label>
+                    <Input
+                      id="schedule-time"
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="invitee-email">Invitees</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="invitee-email"
+                      placeholder="Enter invitee email"
+                      value={inviteeEmail}
+                      onChange={(e) => setInviteeEmail(e.target.value)}
+                    />
+                    <Button type="button" onClick={addInvitee}>
+                      Add
+                    </Button>
+                  </div>
+                  {invitees.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {invitees.map((email) => (
+                        <span
+                          key={email}
+                          className="inline-flex items-center rounded-full border border-border/70 bg-background px-3 py-1 text-sm"
+                        >
+                          {email}
+                          <button
+                            type="button"
+                            className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-muted"
+                            onClick={() => removeInvitee(email)}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {scheduleError && (
+                  <p className="text-sm text-destructive">{scheduleError}</p>
+                )}
+                {scheduleSuccess && (
+                  <p className="text-sm text-success">{scheduleSuccess}</p>
+                )}
+
+                <Button onClick={handleScheduleMeeting}>Schedule meeting</Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
         <Card className="border border-border/60 bg-card/95 py-0">
           <CardHeader className="border-b border-border/70 py-5">
             <div className="flex items-center justify-between gap-3">
