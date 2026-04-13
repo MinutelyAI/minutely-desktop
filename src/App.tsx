@@ -9,49 +9,54 @@ import MeetingNotesPage from "@/pages/meetings/meeting-notes";
 import MeetingNoteDetailPage from "@/pages/meetings/meeting-note-detail";
 import CalenderPage from "@/pages/meetings/calender";
 import MeetingsPage from "@/pages/meetings/meetings";
+import ActiveMeetingPage from "@/pages/meetings/active-meeting";
 import ChatPage from "@/pages/chat/chat";
 import TeamChatPage from "@/pages/chat/team";
 import GroupsChatPage from "@/pages/chat/groups";
+import { MeetingProvider } from "@/contexts/meeting-context";
 
 export default function App() {
   const isLoggedIn = localStorage.getItem("auth") === "true";
   const defaultDashboardRoute = "/meetings";
 
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <LoginPage />}
-      />
+    <MeetingProvider>
+      <Routes>
+        <Route
+          path="/login"
+          element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <LoginPage />}
+        />
 
-      <Route
-        path="/signup"
-        element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <SignupPage />}
-      />
+        <Route
+          path="/signup"
+          element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <SignupPage />}
+        />
 
-      <Route
-        path="/dashboard"
-        element={<Navigate to={defaultDashboardRoute} replace />}
-      />
+        <Route
+          path="/dashboard"
+          element={<Navigate to={defaultDashboardRoute} replace />}
+        />
 
-      <Route element={<ProtectedRoute />}>
-        <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<Dashboard />}>
-            <Route index element={<Navigate to="/meetings" replace />} />
-            <Route path="meetings" element={<MeetingsPage />}>
-              <Route path="start-meetings" element={<StartMeetingPage />} />
-              <Route path="meetings-notes" element={<MeetingNotesPage />}>
-                <Route path=":noteId" element={<MeetingNoteDetailPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedLayout />}>
+            <Route path="/" element={<Dashboard />}>
+              <Route index element={<Navigate to="/meetings" replace />} />
+              <Route path="meetings" element={<MeetingsPage />}>
+                <Route path="start-meetings" element={<StartMeetingPage />} />
+                <Route path="active-meeting" element={<ActiveMeetingPage />} />
+                <Route path="meetings-notes" element={<MeetingNotesPage />}>
+                  <Route path=":noteId" element={<MeetingNoteDetailPage />} />
+                </Route>
+                <Route path="calender" element={<CalenderPage />} />
               </Route>
-              <Route path="calender" element={<CalenderPage />} />
-            </Route>
-            <Route path="chat" element={<ChatPage />}>
-              <Route path="team" element={<TeamChatPage />} />
-              <Route path="groups" element={<GroupsChatPage />} />
+              <Route path="chat" element={<ChatPage />}>
+                <Route path="team" element={<TeamChatPage />} />
+                <Route path="groups" element={<GroupsChatPage />} />
+              </Route>
             </Route>
           </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </MeetingProvider>
   );
 }
