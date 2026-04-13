@@ -10,6 +10,7 @@ import {
   AvatarGroup,
 } from "@/components/ui/avatar";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   MicrophoneIcon as Microphone,
   MicrophoneSlashIcon as MicrophoneOff,
@@ -31,12 +32,17 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { MeetingParticipant } from "@/types";
+import { MeetingParticipant, ActiveMeeting } from "@/types";
 import { availableParticipants } from "@/mock";
 import { UserIcon } from "@phosphor-icons/react";
+import { generateMeetingCode, generateMeetingId, isValidMeetingCode, parseMeetingCode } from "@/lib/meeting-utils";
+import { useMeeting } from "@/contexts/meeting-context";
 
 
 export default function StartMeetingPage() {
+  const navigate = useNavigate();
+  const { createMeeting } = useMeeting();
+
   const [meetingTitle, setMeetingTitle] = useState("");
   const [quickNote, setQuickNote] = useState("");
   const [video, setVideo] = useState(true);
@@ -50,6 +56,7 @@ export default function StartMeetingPage() {
   const [participantError, setParticipantError] = useState("");
   const [selectedParticipants, setSelectedParticipants] = useState<MeetingParticipant[]>([]);
   const [meetingCode, setMeetingCode] = useState("");
+  const [joinError, setJoinError] = useState("");
 
   const [openStartMeeting, setOpenStartMeeting] = useState(false);
   const upcomingMeetings = [
@@ -125,17 +132,82 @@ export default function StartMeetingPage() {
     setParticipantError("");
   };
 
+  const handleCreateMeeting = () => {
+    if (!meetingTitle.trim()) {
+      alert("Please enter a meeting title");
+      return;
+    }
+
+    const meetingCode = generateMeetingCode();
+    const meetingId = generateMeetingId();
+
+    const newMeeting: ActiveMeeting = {
+      id: meetingId,
+      code: meetingCode,
+      title: meetingTitle,
+      hostId: 1, // TODO: Replace with actual user ID from auth
+      participants: selectedParticipants,
+      settings: {
+        microphone: mic,
+        video: video,
+        aiTranscription: transcript,
+        aiNotes: notes,
+      },
+      quickNote: quickNote,
+      startTime: new Date(),
+      isScheduled: isScheduled,
+      scheduledStartTime: isScheduled && scheduledDate && scheduledTime
+        ? new Date(`${scheduledDate}T${scheduledTime}`)
+        : undefined,
+      status: "active",
+    };
+
+    createMeeting(newMeeting);
+    setOpenStartMeeting(false);
+    navigate("/meetings/active-meeting");
+  };
+
+  const handleJoinMeeting = () => {
+    const normalizedCode = meetingCode.trim().toUpperCase();
+
+    if (!normalizedCode) {
+      setJoinError("Please enter a meeting code");
+      return;
+    }
+
+    if (!isValidMeetingCode(normalizedCode)) {
+      setJoinError("Invalid meeting code format. Use format ABC-DEF or ABCDEF");
+      return;
+    }
+
+    // TODO: In a real app, validate the code against backend
+    // For now, just navigate to active meeting
+    // The backend should verify the code exists and add the user as a participant
+    navigate("/meetings/active-meeting");
+  };
+
   return (
     <section className="px-20">
 
       <div className="flex justify-center pb-5">
         <div className="w-full max-w-2xl grid grid-cols-7 gap-2">
-          <Input type="text" placeholder="Enter meeting code..." className="col-span-5" value={meetingCode} onChange={(e) => setMeetingCode(e.target.value)} />
-          <Button variant="default" className="col-span-2">
+          <Input type="text" placeholder="Enter meeting code..." className="col-span-5" value={meetingCode} onChange={(e) => {
+            setMeetingCode(e.target.value);
+            if (joinError) setJoinError("");
+          }} />
+          <Button variant="default" className="col-span-2" onClick={handleJoinMeeting}>
             Join
           </Button>
         </div>
       </div>
+
+      {joinError && (
+        <div className="flex justify-center pb-3">
+          <div className="w-full max-w-2xl">
+            <p className="text-sm text-destructive">{joinError}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4  md:grid-cols-2 items-stretch">
         <Card className="w-full h-full">
@@ -336,7 +408,7 @@ export default function StartMeetingPage() {
 
             <Separator className="mt-6" />
 
-            <Button className="w-full" onClick={() => setOpenStartMeeting(true)}>
+            <Button className="w-full" onClick={handleCreateMeeting}>
               Start Meeting Now
               <ArrowRight />
             </Button>
