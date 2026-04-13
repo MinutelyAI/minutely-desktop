@@ -93,3 +93,29 @@ export type NotificationItem = {
   unread: boolean
   tone: "info" | "success" | "warning"
 }
+
+export type ActiveMeeting = {
+  id: string
+  code: string
+  title: string
+  hostId: number
+  participants: MeetingParticipant[]
+  settings: {
+    microphone: boolean
+    video: boolean
+    aiTranscription: boolean
+    aiNotes: boolean
+  }
+  quickNote: string
+  startTime: Date
+  isScheduled: boolean
+  scheduledStartTime?: Date
+  status: "active" | "paused" | "ended"
+}
+
+export type MeetingEndRequest = {
+  meetingId: string
+  endedBy: "host" | "participant"
+  forAll: boolean
+  timestamp: Date
+}
