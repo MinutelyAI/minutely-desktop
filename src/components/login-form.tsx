@@ -4,17 +4,86 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card"
 import { Field, FieldDescription, FieldGroup, FieldLabel, } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useState } from "react"
+import { BadgeAlert } from "lucide-react"
+
+const API_URL = import.meta.env.VITE_BACKEND;
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const navigate = useNavigate()
+  
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  })
 
-  const handleSubmission = (e: React.FormEvent<HTMLFormElement>) => {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target
+    setForm({
+      ...form,
+      [id]: value,
+    })
+    // Clear error when user starts typing
+    if (error) {
+      setError(null)
+    }
+  }
+
+  const handleSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    localStorage.setItem("auth", "true")
-    navigate("/dashboard")
+    setError(null)
+
+    // Validation
+    if (!form.email.trim()) {
+      setError("Email is required")
+      return
+    }
+
+    if (!form.password) {
+      setError("Password is required")
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.message || "Failed to login")
+        return
+      }
+
+      // Store auth token
+      localStorage.setItem("auth", "true")
+      if (data.token) {
+        localStorage.setItem("token", data.token)
+      }
+
+      // Navigate to dashboard
+      navigate("/dashboard")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network request failed")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -29,6 +98,12 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={handleSubmission}>
             <FieldGroup>
+              {error && (
+                <div className="flex items-center gap-2 rounded-md border bg-destructive/5 p-2 text-sm text-destructive">
+                  <BadgeAlert />
+                  {error}
+                </div>
+              )}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -36,6 +111,9 @@ export function LoginForm({
                   type="email"
                   placeholder="m@example.com"
                   required
+                  value={form.email}
+                  onChange={handleChange}
+                  disabled={loading}
                 />
               </Field>
               <Field>
@@ -48,12 +126,24 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required
+                  value={form.password}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
-                <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="/signup">Sign up</a>
+                <Button type="submit" disabled={loading} className="flex items-center gap-2">
+                  {loading && (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  )}
+                  {loading ? "Logging in..." : "Login"}
+                </Button>
+                <FieldDescription className="text-center" onClick={() => navigate("/signup")}>
+                  Don&apos;t have an account? <a className="font-semibold hover:underline">Sign up</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>
