@@ -26,6 +26,7 @@ type UseWebRTCOptions = {
   participants: Participant[];
   token: string | null;
   apiUrl: string;
+  onUnauthorized?: () => void;
 };
 
 const RTC_CONFIG: RTCConfiguration = {
@@ -39,29 +40,44 @@ export function useWebRTC({
   participants,
   token,
   apiUrl,
+  onUnauthorized,
 }: UseWebRTCOptions) {
   const pcsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
   const lastSignalIdRef = useRef<number>(0);
 
-  const syncLocalTracksToPeer = (pc: RTCPeerConnection, stream: MediaStream | null) => {
+  const syncLocalTracksToPeer = async (pc: RTCPeerConnection, stream: MediaStream | null) => {
     if (!stream) {
       return;
     }
 
-    for (const track of stream.getTracks()) {
-      const sender = pc
-        .getSenders()
-        .find((existingSender) => existingSender.track?.kind === track.kind);
+    const audioTrack = stream.getAudioTracks()[0] || null;
+    const videoTrack = stream.getVideoTracks()[0] || null;
 
-      if (!sender) {
-        pc.addTrack(track, stream);
-        continue;
+    // Sync audio track
+    const audioSender = pc.getSenders().find((s) => s.track?.kind === "audio");
+    if (audioTrack) {
+      if (!audioSender) {
+        pc.addTrack(audioTrack, stream);
+      } else if (!audioSender.track || audioSender.track.id !== audioTrack.id) {
+        await audioSender.replaceTrack(audioTrack);
       }
+    } else if (audioSender?.track) {
+      // Remove audio sender if no audio track available
+      await pc.removeTrack(audioSender);
+    }
 
-      if (!sender.track || sender.track.id !== track.id) {
-        void sender.replaceTrack(track);
+    // Sync video track
+    const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+    if (videoTrack) {
+      if (!videoSender) {
+        pc.addTrack(videoTrack, stream);
+      } else if (!videoSender.track || videoSender.track.id !== videoTrack.id) {
+        await videoSender.replaceTrack(videoTrack);
       }
+    } else if (videoSender?.track) {
+      // Remove video sender if no video track available
+      await pc.removeTrack(videoSender);
     }
   };
 
@@ -92,7 +108,7 @@ export function useWebRTC({
   ) => {
     if (!token || !apiUrl) return;
 
-    await fetch(`${apiUrl}/api/webrtc/signal`, {
+    const response = await fetch(`${apiUrl}/api/webrtc/signal`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -106,19 +122,23 @@ export function useWebRTC({
         ...payload,
       }),
     });
+
+    if (response.status === 401) {
+      onUnauthorized?.();
+    }
   };
 
-  const ensurePeer = (peerEmail: string) => {
+  const ensurePeer = async (peerEmail: string) => {
     const normalized = peerEmail.toLowerCase();
     const existing = pcsRef.current.get(normalized);
     if (existing) {
-      syncLocalTracksToPeer(existing, localStream);
+      await syncLocalTracksToPeer(existing, localStream);
       return existing;
     }
 
     const pc = new RTCPeerConnection(RTC_CONFIG);
 
-    syncLocalTracksToPeer(pc, localStream);
+    await syncLocalTracksToPeer(pc, localStream);
 
     pc.ontrack = (event) => {
       const stream = event.streams[0];
@@ -164,7 +184,7 @@ export function useWebRTC({
           continue;
         }
 
-        const pc = ensurePeer(peerEmail);
+        const pc = await ensurePeer(peerEmail);
         if (pc.signalingState !== "stable") {
           continue;
         }
@@ -183,9 +203,14 @@ export function useWebRTC({
       return;
     }
 
-    pcsRef.current.forEach((pc) => {
-      syncLocalTracksToPeer(pc, localStream);
-    });
+    const syncTracks = async () => {
+      const promises = Array.from(pcsRef.current.values()).map((pc) =>
+        syncLocalTracksToPeer(pc, localStream)
+      );
+      await Promise.all(promises);
+    };
+
+    void syncTracks();
   }, [localStream]);
 
   useEffect(() => {
@@ -207,6 +232,11 @@ export function useWebRTC({
           }
         );
 
+        if (response.status === 401) {
+          onUnauthorized?.();
+          return;
+        }
+
         if (!response.ok) return;
 
         const data = (await response.json()) as { signals?: SignalMessage[] };
@@ -218,7 +248,7 @@ export function useWebRTC({
           }
 
           const peerEmail = signal.from_email.toLowerCase();
-          const pc = ensurePeer(peerEmail);
+          const pc = await ensurePeer(peerEmail);
 
           if (signal.type === "offer" && signal.sdp) {
             await pc.setRemoteDescription({ type: "offer", sdp: signal.sdp });
@@ -255,7 +285,7 @@ export function useWebRTC({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [meetingId, localEmail, token, apiUrl]);
+  }, [meetingId, localEmail, token, apiUrl, onUnauthorized]);
 
   useEffect(() => {
     return () => {

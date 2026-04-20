@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeeting } from '@/contexts/meeting-context';
 import { useMediaStream, useParticipantStreams } from '@/hooks/use-media-stream';
@@ -48,6 +48,12 @@ export default function ActiveMeetingPage() {
   const [syncedParticipants, setSyncedParticipants] = useState<Array<{ email: string }>>([]);
   const token = localStorage.getItem('token');
   const localEmail = getMeetingPeerEmail(localStorage.getItem('user_email'));
+
+  const handleUnauthorized = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth');
+    navigate('/login', { replace: true });
+  }, [navigate]);
   
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [endType, setEndType] = useState<'leave' | 'endForAll'>('leave');
@@ -95,6 +101,7 @@ export default function ActiveMeetingPage() {
     })),
     token,
     apiUrl: API_URL,
+    onUnauthorized: handleUnauthorized,
   });
 
   const remoteParticipants = mergedParticipants.map((p) => ({
@@ -127,6 +134,9 @@ export default function ActiveMeetingPage() {
         );
 
         if (!response.ok) {
+          if (response.status === 401) {
+            handleUnauthorized();
+          }
           return;
         }
 
@@ -177,6 +187,11 @@ export default function ActiveMeetingPage() {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            handleUnauthorized();
+            return;
+          }
+
           const message = await response.text();
           console.error('Participant state sync failed:', response.status, message);
         }

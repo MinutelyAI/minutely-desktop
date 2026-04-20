@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react';
 import { ActiveMeeting, ScheduledMeeting } from '@/types';
 
 type MeetingContextType = {
@@ -16,15 +16,15 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
   const [activeMeeting, setActiveMeeting] = useState<ActiveMeeting | null>(null);
   const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>([]);
 
-  const createMeeting = (meeting: ActiveMeeting) => {
+  const createMeeting = useCallback((meeting: ActiveMeeting) => {
     setActiveMeeting(meeting);
-  };
+  }, []);
 
-  const scheduleMeeting = (meeting: ScheduledMeeting) => {
+  const scheduleMeeting = useCallback((meeting: ScheduledMeeting) => {
     setScheduledMeetings((current) => [...current, meeting]);
-  };
+  }, []);
 
-  const endMeeting = (forAll: boolean) => {
+  const endMeeting = useCallback((forAll: boolean) => {
     if (activeMeeting) {
       if (forAll) {
         // End for all participants
@@ -35,23 +35,25 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
         console.log('User left meeting:', activeMeeting.id);
       }
     }
-  };
+  }, [activeMeeting]);
 
-  const updateMeeting = (updates: Partial<ActiveMeeting>) => {
+  const updateMeeting = useCallback((updates: Partial<ActiveMeeting>) => {
     setActiveMeeting((prev) =>
       prev ? { ...prev, ...updates } : null
     );
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    activeMeeting,
+    scheduledMeetings,
+    createMeeting,
+    scheduleMeeting,
+    endMeeting,
+    updateMeeting,
+  }), [activeMeeting, scheduledMeetings, createMeeting, scheduleMeeting, endMeeting, updateMeeting]);
 
   return (
-    <MeetingContext.Provider value={{
-      activeMeeting,
-      scheduledMeetings,
-      createMeeting,
-      scheduleMeeting,
-      endMeeting,
-      updateMeeting,
-    }}>
+    <MeetingContext.Provider value={contextValue}>
       {children}
     </MeetingContext.Provider>
   );

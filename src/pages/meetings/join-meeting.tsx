@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import ActiveMeetingPage from "@/pages/meetings/active-meeting";
 import { useMeeting } from "@/contexts/meeting-context";
@@ -12,6 +12,7 @@ const API_URL = import.meta.env.VITE_BACKEND;
 
 export default function JoinMeetingPage() {
   const { meetingId } = useParams();
+  const navigate = useNavigate();
   const { activeMeeting, createMeeting } = useMeeting();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,33 @@ export default function JoinMeetingPage() {
         }
 
         const meeting = data.meeting;
+        const participantResponse = await fetch(`${API_URL}/api/meetings/participant/state`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            meeting_id: String(meeting.id),
+            email,
+            has_joined: true,
+            audio_enabled: true,
+            video_enabled: true,
+          }),
+        });
+
+        if (!participantResponse.ok) {
+          if (participantResponse.status === 401) {
+            localStorage.removeItem("token");
+            setError("Session expired or invalid for this backend. Please login again and re-open the meeting link.");
+            setLoading(false);
+            return;
+          }
+
+          const message = await participantResponse.text();
+          throw new Error(message || "Failed to register participant state");
+        }
+
         const joinedMeeting: ActiveMeeting = {
           id: String(meeting.id),
           code: String(meeting.id),
@@ -67,26 +95,6 @@ export default function JoinMeetingPage() {
         };
 
         createMeeting(joinedMeeting);
-
-        const participantResponse = await fetch(`${API_URL}/api/meetings/participant/state`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            meeting_id: String(meeting.id),
-            email,
-            has_joined: true,
-            audio_enabled: true,
-            video_enabled: true,
-          }),
-        });
-
-        if (!participantResponse.ok) {
-          const message = await participantResponse.text();
-          throw new Error(message || "Failed to register participant state");
-        }
 
         setLoading(false);
       } catch (joinError) {
@@ -125,7 +133,7 @@ export default function JoinMeetingPage() {
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" onClick={() => window.history.back()}>
+            <Button className="w-full" onClick={() => navigate("/meetings/start-meetings", { replace: true })}>
               Go back
             </Button>
           </CardContent>
