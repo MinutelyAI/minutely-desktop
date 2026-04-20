@@ -67,15 +67,20 @@ export function LoginForm({
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.message || "Failed to login")
+        setError(data.error || data.message || "Failed to login")
         return
       }
 
       // Store auth token
-      localStorage.setItem("auth", "true")
-      if (data.token) {
-        localStorage.setItem("token", data.token)
+      const token = data.token || data.access_token
+      if (!token) {
+        setError("Login succeeded but no access token was returned")
+        return
       }
+
+      localStorage.setItem("auth", "true")
+      localStorage.setItem("token", token)
+      localStorage.setItem("user_email", form.email.trim().toLowerCase())
 
       // Navigate to dashboard
       navigate("/dashboard")

@@ -35,8 +35,9 @@ import {
 import { MeetingParticipant, ActiveMeeting } from "@/types";
 import { availableParticipants } from "@/mock";
 import { UserIcon } from "@phosphor-icons/react";
-import { generateMeetingCode, generateMeetingId, isValidMeetingCode, parseMeetingCode } from "@/lib/meeting-utils";
 import { useMeeting } from "@/contexts/meeting-context";
+
+const API_URL = import.meta.env.VITE_BACKEND;
 
 
 export default function StartMeetingPage() {
@@ -132,7 +133,7 @@ export default function StartMeetingPage() {
     setParticipantError("");
   };
 
-  const handleCreateMeeting = () => {
+  const handleCreateMeeting = async () => {
     if (!meetingTitle.trim()) {
       alert("Please enter a meeting title");
       return;
@@ -175,49 +176,74 @@ export default function StartMeetingPage() {
       return;
     }
 
-    const meetingCode = generateMeetingCode();
-    const meetingId = generateMeetingId();
+    if (!API_URL) {
+      alert("Backend URL is not configured.");
+      return;
+    }
 
-    const newMeeting: ActiveMeeting = {
-      id: meetingId,
-      code: meetingCode,
-      title: meetingTitle,
-      hostId: 1, // TODO: Replace with actual user ID from auth
-      participants: selectedParticipants,
-      settings: {
-        microphone: mic,
-        video: video,
-        aiTranscription: transcript,
-        aiNotes: notes,
-      },
-      quickNote: quickNote,
-      startTime: new Date(),
-      isScheduled: false,
-      status: "active",
-    };
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/api/meetings/instant`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-    createMeeting(newMeeting);
-    setOpenStartMeeting(false);
-    navigate("/meetings/active-meeting");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Failed to start meeting");
+      }
+
+      const meeting = data.meeting ?? {};
+      const newMeeting: ActiveMeeting = {
+        id: String(meeting.id || data.join_code),
+        code: String(data.join_code || meeting.id),
+        title: meetingTitle,
+        hostId: 1,
+        participants: selectedParticipants,
+        settings: {
+          microphone: mic,
+          video: video,
+          aiTranscription: transcript,
+          aiNotes: notes,
+        },
+        quickNote: quickNote,
+        startTime: new Date(),
+        isScheduled: false,
+        status: "active",
+      };
+
+      createMeeting(newMeeting);
+      setOpenStartMeeting(false);
+      navigate("/meetings/active-meeting");
+    } catch (createError) {
+      alert(createError instanceof Error ? createError.message : "Failed to start meeting");
+    }
   };
 
   const handleJoinMeeting = () => {
-    const normalizedCode = meetingCode.trim().toUpperCase();
+    const normalizedCode = meetingCode.trim();
 
     if (!normalizedCode) {
-      setJoinError("Please enter a meeting code");
+      setJoinError("Please enter a meeting link or meeting ID");
       return;
     }
 
-    if (!isValidMeetingCode(normalizedCode)) {
-      setJoinError("Invalid meeting code format. Use format ABC-DEF or ABCDEF");
+    const meetingId = normalizedCode
+      .replace(/^minutely:\/\/join\//i, "")
+      .replace(/^https?:\/\/[^/]+\/join\//i, "")
+      .replace(/^#\/join\//i, "")
+      .replace(/^\/join\//i, "");
+
+    if (!meetingId) {
+      setJoinError("Please enter a valid meeting link or meeting ID");
       return;
     }
 
-    // TODO: In a real app, validate the code against backend
-    // For now, just navigate to active meeting
-    // The backend should verify the code exists and add the user as a participant
-    navigate("/meetings/active-meeting");
+    navigate(`/join/${encodeURIComponent(meetingId)}`);
   };
 
   return (
@@ -225,7 +251,7 @@ export default function StartMeetingPage() {
 
       <div className="flex justify-center pb-5">
         <div className="w-full max-w-2xl grid grid-cols-7 gap-2">
-          <Input type="text" placeholder="Enter meeting code..." className="col-span-5" value={meetingCode} onChange={(e) => {
+          <Input type="text" placeholder="Enter meeting link or meeting ID..." className="col-span-5" value={meetingCode} onChange={(e) => {
             setMeetingCode(e.target.value);
             if (joinError) setJoinError("");
           }} />

@@ -20,24 +20,30 @@ export default function NavUser({
   let navigate = useNavigate();
 
   const handleLogout = async () => {
+  const token = localStorage.getItem("token")
+
   try {
-    const res = await fetch(`${API_URL}/api/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+    if (API_URL) {
+      const res = await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      })
 
-    if (!res.ok) {
-      const text = await res.text()
-      console.error("Logout error response:", text)
-      return
+      if (!res.ok) {
+        const text = await res.text()
+        console.error("Logout error response:", text)
+      }
     }
-
-    navigate("/login")
   } catch (error) {
     console.error("Logout error:", error)
+  } finally {
+    localStorage.removeItem("token")
+    localStorage.removeItem("auth")
+    localStorage.removeItem("user_email")
+    navigate("/login")
   }
 }
   
