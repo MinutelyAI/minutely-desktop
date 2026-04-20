@@ -6,6 +6,11 @@ if (started) {
   app.quit();
 }
 
+const customUserDataDir = process.env.MINUTELY_USER_DATA_DIR;
+if (customUserDataDir) {
+  app.setPath("userData", customUserDataDir);
+}
+
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,

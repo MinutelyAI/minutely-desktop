@@ -89,7 +89,7 @@ interface VideoGridProps {
   remoteStreams: Array<{
     id: string;
     displayName: string;
-    stream: MediaStream;
+    stream: MediaStream | null;
     audioEnabled: boolean;
     videoEnabled: boolean;
   }>;

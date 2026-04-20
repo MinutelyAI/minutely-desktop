@@ -14,14 +14,18 @@ import ChatPage from "@/pages/chat/chat";
 import TeamChatPage from "@/pages/chat/team";
 import GroupsChatPage from "@/pages/chat/groups";
 import { MeetingProvider } from "@/contexts/meeting-context";
+import JoinMeetingPage from "@/pages/meetings/join-meeting";
 
 export default function App() {
-  const isLoggedIn = localStorage.getItem("auth") === "true";
+  const isLoggedIn =
+    localStorage.getItem("auth") === "true" && Boolean(localStorage.getItem("token"));
   const defaultDashboardRoute = "/meetings";
 
   return (
     <MeetingProvider>
       <Routes>
+        <Route path="/join/:meetingId" element={<JoinMeetingPage />} />
+
         <Route
           path="/login"
           element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <LoginPage />}
