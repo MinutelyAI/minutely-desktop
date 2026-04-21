@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeeting } from '@/contexts/meeting-context';
 import { useMediaStream, useParticipantStreams } from '@/hooks/use-media-stream';
+import { useWebRTC } from '@/hooks/use-webrtc';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { formatMeetingCode } from '@/lib/meeting-utils';
+import { getMeetingPeerEmail } from '@/lib/participant-identity';
 import { VideoGrid } from '@/components/video-grid';
 import {
   Mic,
@@ -23,6 +25,15 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_BACKEND;
+
+const toDisplayName = (email: string) =>
+  email
+    .split('@')[0]
+    .split('+')[0]
+    .replace(/[._-]+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 export default function ActiveMeetingPage() {
   const { activeMeeting, endMeeting } = useMeeting();
   const navigate = useNavigate();
@@ -34,6 +45,15 @@ export default function ActiveMeetingPage() {
   });
   
   const { participantStreams } = useParticipantStreams();
+  const [syncedParticipants, setSyncedParticipants] = useState<Array<{ email: string }>>([]);
+  const token = localStorage.getItem('token');
+  const localEmail = getMeetingPeerEmail(localStorage.getItem('user_email'));
+
+  const handleUnauthorized = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth');
+    navigate('/login', { replace: true });
+  }, [navigate]);
   
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [endType, setEndType] = useState<'leave' | 'endForAll'>('leave');
@@ -44,13 +64,144 @@ export default function ActiveMeetingPage() {
   const [videoEnabled, setVideoEnabled] = useState(mediaStream.isVideoEnabled);
   
   // Simulate adding participant streams (in a real app, this would come from backend)
-  const remoteParticipants = activeMeeting?.participants.map((p) => ({
-    id: `participant-${p.id}`,
+  const mergedParticipants = (() => {
+    if (!activeMeeting) return [];
+
+    const currentEmail = getMeetingPeerEmail(localStorage.getItem('user_email'));
+    const map = new Map<string, { id: number; displayName: string; email: string; username: string }>();
+
+    activeMeeting.participants.forEach((participant) => {
+      map.set(participant.email.toLowerCase(), participant);
+    });
+
+    syncedParticipants.forEach((participant, index) => {
+      const email = participant.email.toLowerCase();
+      if (!email || email === currentEmail || map.has(email)) {
+        return;
+      }
+
+      map.set(email, {
+        id: Date.now() + index,
+        displayName: toDisplayName(email),
+        email,
+        username: email.split('@')[0],
+      });
+    });
+
+    return Array.from(map.values());
+  })();
+
+  const { remoteStreams } = useWebRTC({
+    meetingId: activeMeeting?.id || '',
+    localEmail,
+    localStream: mediaStream.stream,
+    participants: mergedParticipants.map((participant) => ({
+      email: participant.email,
+      displayName: participant.displayName,
+    })),
+    token,
+    apiUrl: API_URL,
+    onUnauthorized: handleUnauthorized,
+  });
+
+  const remoteParticipants = mergedParticipants.map((p) => ({
+    id: `participant-${p.email}`,
     displayName: p.displayName,
-    stream: new MediaStream(), // Placeholder stream
+    stream: remoteStreams.get(p.email.toLowerCase()) ?? participantStreams.get(p.email.toLowerCase()) ?? null,
     audioEnabled: true,
     videoEnabled: true,
-  })) || [];
+  }));
+
+  useEffect(() => {
+    if (!activeMeeting || !API_URL) {
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    const fetchParticipants = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/meetings/participants?id=${encodeURIComponent(activeMeeting.id)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            handleUnauthorized();
+          }
+          return;
+        }
+
+        const data = await response.json();
+        const participants = Array.isArray(data.participants)
+          ? data.participants
+              .filter((participant) => participant?.email)
+              .map((participant) => ({ email: String(participant.email) }))
+          : [];
+
+        setSyncedParticipants(participants);
+      } catch {
+        // Best-effort sync. UI keeps local participant list if fetch fails.
+      }
+    };
+
+    fetchParticipants();
+    const interval = setInterval(fetchParticipants, 3000);
+    return () => clearInterval(interval);
+  }, [activeMeeting?.id]);
+
+  useEffect(() => {
+    if (!activeMeeting || !API_URL) {
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const email = getMeetingPeerEmail(localStorage.getItem('user_email'));
+    if (!token || !email) {
+      return;
+    }
+
+    const syncState = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/meetings/participant/state`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            meeting_id: activeMeeting.id,
+            email,
+            has_joined: true,
+            audio_enabled: micEnabled,
+            video_enabled: videoEnabled,
+          }),
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            handleUnauthorized();
+            return;
+          }
+
+          const message = await response.text();
+          console.error('Participant state sync failed:', response.status, message);
+        }
+      } catch {
+        // Best-effort state sync.
+      }
+    };
+
+    syncState();
+  }, [activeMeeting?.id, micEnabled, videoEnabled]);
   
   useEffect(() => {
     setMicEnabled(mediaStream.isAudioEnabled);
@@ -97,12 +248,10 @@ export default function ActiveMeetingPage() {
 
   const handleToggleMic = () => {
     mediaStream.toggleAudio();
-    setMicEnabled(!micEnabled);
   };
 
   const handleToggleVideo = () => {
     mediaStream.toggleVideo();
-    setVideoEnabled(!videoEnabled);
   };
 
   const handleEndMeeting = () => {
@@ -194,7 +343,7 @@ export default function ActiveMeetingPage() {
                 size="lg"
                 className="h-14 w-14 rounded-full p-0"
                 onClick={handleCopyCode}
-                title="Copy meeting code"
+                title="Copy meeting ID"
               >
                 {copied ? (
                   <Check className="h-6 w-6 text-green-600" />
@@ -238,7 +387,7 @@ export default function ActiveMeetingPage() {
               {videoEnabled ? '📹 Camera On' : '📹 Camera Off'}
             </Badge>
             <Badge variant="secondary">
-              👥 {activeMeeting.participants.length + 1} Participants
+              👥 {mergedParticipants.length + 1} Participants
             </Badge>
           </div>
         </CardContent>
@@ -275,7 +424,7 @@ export default function ActiveMeetingPage() {
         {/* Participants Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Participants ({activeMeeting.participants.length + 1})</CardTitle>
+            <CardTitle className="text-base">Participants ({mergedParticipants.length + 1})</CardTitle>
             <CardDescription>People in this meeting</CardDescription>
           </CardHeader>
           <CardContent>
@@ -291,7 +440,7 @@ export default function ActiveMeetingPage() {
                 <Badge variant="secondary" className="text-xs">Online</Badge>
               </div>
 
-              {activeMeeting.participants.map((participant) => (
+              {mergedParticipants.map((participant) => (
                 <div key={participant.id} className="flex items-center gap-3 rounded-lg border p-2">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-xs">
@@ -332,7 +481,7 @@ export default function ActiveMeetingPage() {
             <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/5 p-3">
               <AlertCircle className="h-4 w-4 text-destructive" />
               <p className="text-sm text-destructive">
-                This will end the meeting for all {activeMeeting.participants.length + 1} participants.
+                This will end the meeting for all {mergedParticipants.length + 1} participants.
               </p>
             </div>
           )}

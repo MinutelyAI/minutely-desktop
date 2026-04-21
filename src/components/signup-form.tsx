@@ -77,12 +77,11 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
       if (!res.ok) {
         console.log("Signup error response:", data);
-        setError(data.message || "Failed to create account")
+        setError(data.error || data.message || "Failed to create account")
         return
       }
 
       setSuccess(true)
-      localStorage.setItem("auth", "true")
       // Reset form
       setForm({
         name: "",
@@ -91,9 +90,9 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         confirmPassword: "",
       })
 
-      // Redirect to dashboard
+      // Redirect to login so user obtains a valid access token
       setTimeout(() => {
-        navigate("/dashboard")
+        navigate("/login")
       }, 1500)
 
     } catch (err) {
