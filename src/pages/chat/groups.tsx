@@ -14,36 +14,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
-const groups = [
-  {
-    id: 1,
-    name: "Launch Crew",
-    members: 8,
-    status: "Active",
-    topic: "Release prep, QA status, and launch blockers.",
-    lastUpdate: "Support caveats still need sign-off before staging freeze.",
-  },
-  {
-    id: 2,
-    name: "Design Reviews",
-    members: 5,
-    status: "Quiet",
-    topic: "Async critique and handoff decisions.",
-    lastUpdate: "Notes workspace polish is waiting on final spacing review.",
-  },
-  {
-    id: 3,
-    name: "Customer Ops",
-    members: 6,
-    status: "Active",
-    topic: "Onboarding asks, pilot issues, and customer follow-ups.",
-    lastUpdate: "Enterprise export formatting is still the main recurring request.",
-  },
-]
+const groups: any[] = []
 
 export default function GroupsChatPage() {
   const [search, setSearch] = useState("")
-  const [selectedGroupId, setSelectedGroupId] = useState(groups[0].id)
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
+    groups.length > 0 ? groups[0].id : null
+  )
   const [draft, setDraft] = useState("")
 
   const filteredGroups = useMemo(
@@ -60,7 +37,8 @@ export default function GroupsChatPage() {
     filteredGroups.find((group) => group.id === selectedGroupId) ??
     groups.find((group) => group.id === selectedGroupId) ??
     filteredGroups[0] ??
-    groups[0]
+    groups[0] ??
+    null
 
   return (
     <section className="flex flex-1 flex-col gap-5 p-5">
@@ -91,73 +69,83 @@ export default function GroupsChatPage() {
 
         <CardContent className="grid gap-4 px-4 py-4 lg:grid-cols-[280px_minmax(0,1fr)]">
           <div className="space-y-3">
-            {filteredGroups.map((group) => {
-              const isActive = group.id === selectedGroup.id
+            {filteredGroups.length > 0 ? (
+              filteredGroups.map((group) => {
+                const isActive = selectedGroup && group.id === selectedGroup.id
 
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  onClick={() => setSelectedGroupId(group.id)}
-                  className={cn(
-                    "w-full rounded-2xl border px-4 py-3 text-left transition",
-                    isActive
-                      ? "border-primary/30 bg-primary/8"
-                      : "border-border/70 bg-background hover:bg-muted/30"
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium">{group.name}</p>
-                    <Badge variant="outline">{group.status}</Badge>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{group.members} members</p>
-                </button>
-              )
-            })}
-
-            {filteredGroups.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-border/70 px-4 py-6 text-sm text-muted-foreground">
-                No groups match your search.
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => setSelectedGroupId(group.id)}
+                    className={cn(
+                      "w-full rounded-2xl border px-4 py-3 text-left transition",
+                      isActive
+                        ? "border-primary/30 bg-primary/8"
+                        : "border-border/70 bg-background hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">{group.name}</p>
+                      <Badge variant="outline">{group.status}</Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{group.members} members</p>
+                  </button>
+                )
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+                <Users className="mb-3 h-10 w-10 opacity-20" />
+                <p className="text-base font-medium text-foreground">No groups found</p>
+                <p className="mt-1 text-sm">Create a group to coordinate with your team.</p>
               </div>
             )}
           </div>
 
-          <div className="rounded-2xl border border-border/70 bg-background p-4">
-            <div className="flex flex-col gap-3 border-b border-border/70 pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold">{selectedGroup.name}</p>
-                  <p className="text-sm text-muted-foreground">{selectedGroup.members} members</p>
+          {selectedGroup ? (
+            <div className="rounded-2xl border border-border/70 bg-background p-4">
+              <div className="flex flex-col gap-3 border-b border-border/70 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-semibold">{selectedGroup.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedGroup.members} members</p>
+                  </div>
+                  <Badge>{selectedGroup.status}</Badge>
                 </div>
-                <Badge>{selectedGroup.status}</Badge>
-              </div>
-              <p className="text-sm leading-6 text-muted-foreground">{selectedGroup.topic}</p>
-            </div>
-
-            <div className="space-y-4 py-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Latest update</p>
-                <p className="mt-2 text-sm leading-6">{selectedGroup.lastUpdate}</p>
+                <p className="text-sm leading-6 text-muted-foreground">{selectedGroup.topic}</p>
               </div>
 
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Post an update</p>
-                <Textarea
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  placeholder={`Write a short update for ${selectedGroup.name.toLowerCase()}...`}
-                  className="mt-2 min-h-28"
-                />
+              <div className="space-y-4 py-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Latest update</p>
+                  <p className="mt-2 text-sm leading-6">{selectedGroup.lastUpdate}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Post an update</p>
+                  <Textarea
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder={`Write a short update for ${selectedGroup.name.toLowerCase()}...`}
+                    className="mt-2 min-h-28"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end border-t border-border/70 pt-4">
+                <Button disabled={draft.trim().length === 0}>
+                  <SendHorizonal />
+                  Send
+                </Button>
               </div>
             </div>
-
-            <div className="flex justify-end border-t border-border/70 pt-4">
-              <Button disabled={draft.trim().length === 0}>
-                <SendHorizonal />
-                Send
-              </Button>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 bg-card/50 p-8 text-center text-muted-foreground">
+              <Users className="mb-4 h-12 w-12 opacity-20" />
+              <p className="text-lg font-medium text-foreground">No group selected</p>
+              <p className="mt-1 text-sm">Select a group to view details and post updates.</p>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </section>

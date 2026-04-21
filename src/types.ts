@@ -13,8 +13,8 @@ export type StartMeetingSheetProps = {
   onAINotesEnabledChange: (value: boolean) => void;
   isScheduled: boolean;
   onIsScheduledChange: (value: boolean) => void;
-  scheduledDate: string;
-  onScheduledDateChange: (value: string) => void;
+  scheduledDate: Date | undefined;
+  onScheduledDateChange: (value: Date | undefined) => void;
   scheduledTime: string;
   onScheduledTimeChange: (value: string) => void;
   participants: MeetingParticipant[];

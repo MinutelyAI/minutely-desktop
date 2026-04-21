@@ -33,9 +33,13 @@ import {
   X,
 } from "lucide-react";
 import { MeetingParticipant, ActiveMeeting } from "@/types";
-import { availableParticipants } from "@/mock";
-import { UserIcon } from "@phosphor-icons/react";
+import { UserIcon, CalendarIcon } from "@phosphor-icons/react";
 import { useMeeting } from "@/contexts/meeting-context";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const API_URL = import.meta.env.VITE_BACKEND;
 
@@ -51,7 +55,7 @@ export default function StartMeetingPage() {
   const [transcript, setAITranscription] = useState(true);
   const [notes, setAINotes] = useState(true);
   const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [scheduledTime, setScheduledTime] = useState("");
   const [participantEmail, setParticipantEmail] = useState("");
   const [participantError, setParticipantError] = useState("");
@@ -60,38 +64,7 @@ export default function StartMeetingPage() {
   const [joinError, setJoinError] = useState("");
 
   const [openStartMeeting, setOpenStartMeeting] = useState(false);
-  const upcomingMeetings = [
-    {
-      id: 1,
-      title: "Product Planning",
-      time: "Today, 11:30 AM",
-      duration: "45 min",
-      room: "Strategy Room",
-      attendees: 6,
-      status: "Live in 8 min",
-      joinable: true,
-    },
-    {
-      id: 2,
-      title: "Design Critique",
-      time: "Today, 3:00 PM",
-      duration: "30 min",
-      room: "Studio Sync",
-      attendees: 4,
-      status: "Scheduled",
-      joinable: false,
-    },
-    {
-      id: 3,
-      title: "Customer Review",
-      time: "Tomorrow, 9:00 AM",
-      duration: "60 min",
-      room: "Client Channel",
-      attendees: 8,
-      status: "Scheduled",
-      joinable: false,
-    },
-  ];
+  const upcomingMeetings: any[] = [];
   const activeTools = [
     mic ? "Microphone on" : "Microphone off",
     video ? "Camera on" : "Camera off",
@@ -107,21 +80,29 @@ export default function StartMeetingPage() {
       return;
     }
 
-    const matchedParticipant = availableParticipants.find(
-      (participant) => participant.email.toLowerCase() === normalizedEmail
-    );
-
-    if (!matchedParticipant) {
-      setParticipantError("No user found with that email address.");
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      setParticipantError("Enter a valid email address.");
       return;
     }
 
-    if (selectedParticipants.some((participant) => participant.id === matchedParticipant.id)) {
+    if (selectedParticipants.some((participant) => participant.email === normalizedEmail)) {
       setParticipantError("That participant is already added.");
       return;
     }
 
-    setSelectedParticipants((current) => [...current, matchedParticipant]);
+    const userName = normalizedEmail.split('@')[0];
+    const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
+
+    setSelectedParticipants((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        displayName: displayName,
+        email: normalizedEmail,
+        username: userName,
+        avatar: "",
+      }
+    ]);
     setParticipantEmail("");
     setParticipantError("");
   };
@@ -135,17 +116,18 @@ export default function StartMeetingPage() {
 
   const handleCreateMeeting = async () => {
     if (!meetingTitle.trim()) {
-      alert("Please enter a meeting title");
+      toast.error("Please enter a meeting title");
       return;
     }
 
     if (isScheduled) {
       if (!scheduledDate || !scheduledTime) {
-        alert("Please choose a date and time for a scheduled meeting.");
+        toast.error("Please choose a date and time for a scheduled meeting.");
         return;
       }
 
-      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
+      const dateString = format(scheduledDate, "yyyy-MM-dd");
+      const scheduledAt = new Date(`${dateString}T${scheduledTime}`);
       scheduleMeeting({
         id: Date.now(),
         title: meetingTitle.trim(),
@@ -177,7 +159,7 @@ export default function StartMeetingPage() {
     }
 
     if (!API_URL) {
-      alert("Backend URL is not configured.");
+      toast.error("Backend URL is not configured.");
       return;
     }
 
@@ -220,7 +202,7 @@ export default function StartMeetingPage() {
       setOpenStartMeeting(false);
       navigate("/meetings/active-meeting");
     } catch (createError) {
-      alert(createError instanceof Error ? createError.message : "Failed to start meeting");
+      toast.error(createError instanceof Error ? createError.message : "Failed to start meeting");
     }
   };
 
@@ -247,7 +229,7 @@ export default function StartMeetingPage() {
   };
 
   return (
-    <section className="px-20">
+    <section className="px-4 md:px-8 lg:px-12 py-6">
 
       <div className="flex justify-center pb-5">
         <div className="w-full max-w-2xl grid grid-cols-7 gap-2">
@@ -300,18 +282,18 @@ export default function StartMeetingPage() {
 
             <Label>Meeting Settings</Label>
 
-            <div className="grid grid-cols-4 gap-2 w-full">
-              <Toggle variant="outline" pressed={mic} onPressedChange={setMic} >
-                {mic ? <Microphone /> : <MicrophoneOff />} Microphone
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 w-full">
+              <Toggle variant="outline" pressed={mic} onPressedChange={setMic} className="flex gap-2">
+                {mic ? <Microphone /> : <MicrophoneOff />} <span>Mic</span>
               </Toggle>
-              <Toggle variant="outline" pressed={video} onPressedChange={setVideo} >
-                {video ? <Video /> : <VideoOff />} Video
+              <Toggle variant="outline" pressed={video} onPressedChange={setVideo} className="flex gap-2">
+                {video ? <Video /> : <VideoOff />} <span>Video</span>
               </Toggle>
-              <Toggle variant="outline" pressed={transcript} onPressedChange={setAITranscription} >
-                {transcript ? <AITranscription /> : <AITranscriptionOff />} AI Transcription
+              <Toggle variant="outline" pressed={transcript} onPressedChange={setAITranscription} className="flex gap-2">
+                {transcript ? <AITranscription /> : <AITranscriptionOff />} <span>Transcript</span>
               </Toggle>
-              <Toggle variant="outline" pressed={notes} onPressedChange={setAINotes} >
-                {notes ? <AINotes /> : <AINotesOff />} AI Notes
+              <Toggle variant="outline" pressed={notes} onPressedChange={setAINotes} className="flex gap-2">
+                {notes ? <AINotes /> : <AINotesOff />} <span>Notes</span>
               </Toggle>
             </div>
 
@@ -324,16 +306,43 @@ export default function StartMeetingPage() {
                 </Toggle>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="meeting-date">Date</Label>
-                  <Input id="meeting-date" disabled={!isScheduled} type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
+              {isScheduled ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="meeting-date">Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-card hover:bg-muted/50 border-border/60",
+                            !scheduledDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {scheduledDate ? format(scheduledDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={scheduledDate}
+                          onSelect={setScheduledDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="meeting-time">Time</Label>
+                    <Input id="meeting-time" type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="meeting-time">Time</Label>
-                  <Input id="meeting-time" disabled={!isScheduled} type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
-                </div>
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  The meeting will start immediately when you confirm.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-3 rounded-xl border bg-muted/20 p-4">
@@ -488,96 +497,105 @@ export default function StartMeetingPage() {
           </CardHeader>
 
           <CardContent className="space-y-4 pt-0">
-            <div className="rounded-xl border bg-muted/20 p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <Label className="text-sm">Next Up</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Your nearest meeting is ready to review.
-                  </p>
-                </div>
-                <span className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
-                  {upcomingMeetings[0].status}
-                </span>
-              </div>
-
-              <div className="rounded-xl border bg-background p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{upcomingMeetings[0].title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {upcomingMeetings[0].time} · {upcomingMeetings[0].duration}
-                    </p>
+            {upcomingMeetings.length > 0 ? (
+              <>
+                <div className="rounded-xl border bg-muted/20 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <Label className="text-sm">Next Up</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Your nearest meeting is ready to review.
+                      </p>
+                    </div>
+                    <span className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
+                      {upcomingMeetings[0]?.status}
+                    </span>
                   </div>
-                  <Button size="sm">
-                    Join
-                  </Button>
-                </div>
 
-                <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{upcomingMeetings[0].room}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>{upcomingMeetings[0].attendees} attendees invited</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <Label className="text-sm">Upcoming Meeting</Label>
-                </div>
-                <span className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
-                  {upcomingMeetings.length} meetings
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {upcomingMeetings.map((meeting) => (
-                  <div key={meeting.id} className="rounded-lg border p-3 transition hover:bg-muted/40" >
+                  <div className="rounded-xl border bg-background p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-medium">{meeting.title}</p>
-                        <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {meeting.time}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {meeting.attendees} people
-                          </span>
-                        </div>
+                        <p className="font-medium">{upcomingMeetings[0]?.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {upcomingMeetings[0]?.time} · {upcomingMeetings[0]?.duration}
+                        </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={meeting.joinable ? "default" : "outline"}
-                      >
-                        {meeting.joinable ? "Join" : "View"}
+                      <Button size="sm">
+                        Join
                       </Button>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                        {meeting.duration}
-                      </span>
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                        {meeting.room}
-                      </span>
-                      <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                        {meeting.status}
-                      </span>
+                    <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{upcomingMeetings[0]?.room}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>{upcomingMeetings[0]?.attendees} attendees invited</span>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
+                <div className="rounded-xl border p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <Label className="text-sm">Upcoming Meeting</Label>
+                    </div>
+                    <span className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
+                      {upcomingMeetings.length} meetings
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {upcomingMeetings.map((meeting) => (
+                      <div key={meeting.id} className="rounded-lg border p-3 transition hover:bg-muted/40" >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{meeting.title}</p>
+                            <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                {meeting.time}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                {meeting.attendees} people
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={meeting.joinable ? "default" : "outline"}
+                          >
+                            {meeting.joinable ? "Join" : "View"}
+                          </Button>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                            {meeting.duration}
+                          </span>
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                            {meeting.room}
+                          </span>
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                            {meeting.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+                <CalendarClock className="h-12 w-12 mb-4 opacity-20" />
+                <p className="text-lg font-medium text-foreground">No upcoming meetings</p>
+                <p className="text-sm mt-1">Schedule a meeting to see it here.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

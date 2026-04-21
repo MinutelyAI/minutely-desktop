@@ -44,53 +44,61 @@ export default function MeetingNotesPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {filteredNotes.map((note) => (
-          <Link key={note.id} to={`/meetings/meetings-notes/${note.id}`} className="block">
-            <Card className="h-full border border-border/70 transition hover:-translate-y-0.5 hover:bg-muted/20">
-              <CardHeader className="gap-3 border-b">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-2">
-                    <Badge>
-                      {note.category}
-                    </Badge>
-                    <div>
-                      <CardTitle className="line-clamp-2 text-lg">{note.title}</CardTitle>
-                      <CardDescription className="mt-1 line-clamp-2">
-                        {note.meeting.summary}
-                      </CardDescription>
+        {filteredNotes.length > 0 ? (
+          filteredNotes.map((note) => (
+            <Link key={note.id} to={`/meetings/meetings-notes/${note.id}`} className="block">
+              <Card className="h-full border border-border/70 transition hover:-translate-y-0.5 hover:bg-muted/20">
+                <CardHeader className="gap-3 border-b">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-2">
+                      <Badge>
+                        {note.category}
+                      </Badge>
+                      <div>
+                        <CardTitle className="line-clamp-2 text-lg">{note.title}</CardTitle>
+                        <CardDescription className="mt-1 line-clamp-2">
+                          {note.meeting.summary}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                  </div>
+                </CardHeader>
+
+                <CardContent className="grid gap-4">
+                  <div className="flex flex-wrap gap-2">
+                    {note.tags.map((tag) => (
+                      <Badge key={tag} variant="outline">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <div className="grid gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4" />
+                      <span>{note.meeting.dateLabel}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>{note.meeting.participants.length} participants</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      <span>{note.actionItems.length} action items</span>
                     </div>
                   </div>
-                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-                </div>
-              </CardHeader>
-
-              <CardContent className="grid gap-4">
-                <div className="flex flex-wrap gap-2">
-                  {note.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                <div className="grid gap-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    <span>{note.meeting.dateLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>{note.meeting.participants.length} participants</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4" />
-                    <span>{note.actionItems.length} action items</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                </CardContent>
+              </Card>
+            </Link>
+          ))
+        ) : (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-center text-muted-foreground border border-dashed border-border/60 rounded-2xl bg-card/50">
+            <ClipboardList className="mb-4 h-12 w-12 opacity-20" />
+            <p className="text-lg font-medium text-foreground">No notes found</p>
+            <p className="mt-1 text-sm">Meeting notes will appear here after your sessions.</p>
+          </div>
+        )}
       </div>
     </section>
   );

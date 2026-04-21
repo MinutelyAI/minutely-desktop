@@ -15,6 +15,11 @@ import TeamChatPage from "@/pages/chat/team";
 import GroupsChatPage from "@/pages/chat/groups";
 import { MeetingProvider } from "@/contexts/meeting-context";
 import JoinMeetingPage from "@/pages/meetings/join-meeting";
+import SettingsPage from "@/pages/misc/settings";
+import ArchivePage from "@/pages/misc/archive";
+import TrashPage from "@/pages/misc/trash";
+import { Toaster } from "sonner";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   const isLoggedIn = localStorage.getItem("auth") === "true" && Boolean(localStorage.getItem("token"));
@@ -28,7 +33,9 @@ export default function App() {
   const defaultDashboardRoute = "/meetings";
 
   return (
+    <ThemeProvider>
     <MeetingProvider>
+      <Toaster position="bottom-right" richColors />
       <Routes>
         <Route path="/join/:meetingId" element={<JoinMeetingPage />} />
 
@@ -71,10 +78,14 @@ export default function App() {
                 <Route path="team" element={<TeamChatPage />} />
                 <Route path="groups" element={<GroupsChatPage />} />
               </Route>
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="archive" element={<ArchivePage />} />
+              <Route path="trash" element={<TrashPage />} />
             </Route>
           </Route>
         </Route>
       </Routes>
     </MeetingProvider>
+    </ThemeProvider>
   );
 }

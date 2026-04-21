@@ -143,8 +143,8 @@ export default function ActiveMeetingPage() {
         const data = await response.json();
         const participants = Array.isArray(data.participants)
           ? data.participants
-              .filter((participant) => participant?.email)
-              .map((participant) => ({ email: String(participant.email) }))
+              .filter((participant: { email?: string }) => participant?.email)
+              .map((participant: { email: string }) => ({ email: String(participant.email) }))
           : [];
 
         setSyncedParticipants(participants);

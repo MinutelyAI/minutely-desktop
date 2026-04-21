@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
-import { meetingNotes, notifications as mockNotifications } from "@/mock"
+import { meetingNotes } from "@/mock"
 
 import { AppSidebar as Sidebar } from "@/components/sidebar"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, } from "@/components/ui/breadcrumb"
@@ -24,7 +24,7 @@ import { NotificationItem } from "@/types"
 export default function ProtectedLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notificationItems, setNotificationItems] =
-    useState<NotificationItem[]>(mockNotifications)
+    useState<NotificationItem[]>([])
 
   const { pathname } = useLocation()
   const unreadCount = notificationItems.filter((notification) => notification.unread).length
@@ -97,6 +97,12 @@ export default function ProtectedLayout() {
           { label: "Chat", to: "/chat" },
           { label: "Groups" },
         ]
+      case "/settings":
+        return [{ label: "Settings" }]
+      case "/archive":
+        return [{ label: "Archive" }]
+      case "/trash":
+        return [{ label: "Trash" }]
       default:
         return []
     }
@@ -195,56 +201,64 @@ export default function ProtectedLayout() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
-                  {notificationItems.map((notification, index) => (
-                    <Fragment key={notification.id}>
-                      <DropdownMenuItem
-                        className="cursor-pointer items-start px-3 py-3 focus:bg-primary/5 focus:text-foreground hover:bg-primary/5"
-                        onClick={() => markNotificationAsRead(notification.id)}
-                      >
-                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p
-                                className={`line-clamp-1 font-medium ${
-                                  notification.unread ? "text-foreground" : "text-muted-foreground"
-                                }`}
-                              >
-                                {notification.title}
-                              </p>
+                  {notificationItems.length > 0 ? (
+                    notificationItems.map((notification, index) => (
+                      <Fragment key={notification.id}>
+                        <DropdownMenuItem
+                          className="cursor-pointer items-start px-3 py-3 focus:bg-primary/5 focus:text-foreground hover:bg-primary/5"
+                          onClick={() => markNotificationAsRead(notification.id)}
+                        >
+                          <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <p
+                                  className={`line-clamp-1 font-medium ${
+                                    notification.unread ? "text-foreground" : "text-muted-foreground"
+                                  }`}
+                                >
+                                  {notification.title}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {notification.unread && <Dot className="h-4 w-4 text-primary" />}
+                                <span className="shrink-0 text-xs text-muted-foreground">
+                                  {notification.timeLabel}
+                                </span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  className="ml-1 text-primary hover:text-primary cursor-pointer"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    deleteNotification(notification.id)
+                                  }}
+                                  aria-label={`Delete ${notification.title}`}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              {notification.unread && <Dot className="h-4 w-4 text-primary" />}
-                              <span className="shrink-0 text-xs text-muted-foreground">
-                                {notification.timeLabel}
-                              </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-xs"
-                                className="ml-1 text-primary hover:text-primary cursor-pointer"
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  deleteNotification(notification.id)
-                                }}
-                                aria-label={`Delete ${notification.title}`}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+                            <p
+                              className={`mt-1 line-clamp-2 text-sm ${
+                                notification.unread ? "text-muted-foreground" : "text-muted-foreground/80"
+                              }`}
+                            >
+                              {notification.description}
+                            </p>
                           </div>
-                          <p
-                            className={`mt-1 line-clamp-2 text-sm ${
-                              notification.unread ? "text-muted-foreground" : "text-muted-foreground/80"
-                            }`}
-                          >
-                            {notification.description}
-                          </p>
-                        </div>
-                      </DropdownMenuItem>
-                      {index < notificationItems.length - 1 && <DropdownMenuSeparator />}
-                    </Fragment>
-                  ))}
+                        </DropdownMenuItem>
+                        {index < notificationItems.length - 1 && <DropdownMenuSeparator />}
+                      </Fragment>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center px-4 py-8 text-center text-muted-foreground">
+                      <Notif className="mb-3 h-8 w-8 opacity-20" />
+                      <p className="text-sm font-medium text-foreground">No new notifications</p>
+                      <p className="text-xs mt-1">We'll let you know when something comes up.</p>
+                    </div>
+                  )}
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -15,13 +15,13 @@ import {
   PencilSimpleSlashIcon as AINotesOff,
   PencilSimpleIcon as AINotes,
 } from "@phosphor-icons/react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "../ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function StartMeetingSheet({
   meetingTitle,
@@ -163,11 +163,28 @@ export default function StartMeetingSheet({
             </div>
             {isScheduled ? (
               <div className="grid gap-3 md:grid-cols-2">
-                <Input
-                  type="date"
-                  value={scheduledDate}
-                  onChange={(e) => onScheduledDateChange(e.target.value)}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-card hover:bg-muted/50 border-border/60",
+                        !scheduledDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {scheduledDate ? format(scheduledDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={scheduledDate}
+                      onSelect={onScheduledDateChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <Input
                   type="time"
                   value={scheduledTime}

@@ -1,20 +1,23 @@
 import { Link, useOutlet } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   ArrowRight,
   CalendarDays,
   ClipboardList,
   Clock3,
+  Loader2,
   MapPin,
   Sparkles,
   Users,
   X,
 } from "lucide-react"
 
-import { meetingNotes } from "@/mock"
 import { useMeeting } from "@/contexts/meeting-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,36 +29,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 
-const upcomingMeetings = [
-  {
-    id: 1,
-    title: "Product Planning",
-    dateLabel: "Today",
-    timeRange: "11:30 AM - 12:15 PM",
-    location: "Strategy Room",
-    participants: 6,
-    status: "Starts in 8 min",
-  },
-  {
-    id: 2,
-    title: "Design Critique",
-    dateLabel: "Today",
-    timeRange: "3:00 PM - 3:30 PM",
-    location: "Studio Sync",
-    participants: 4,
-    status: "Scheduled",
-  },
-  {
-    id: 3,
-    title: "Customer Review",
-    dateLabel: "Tomorrow",
-    timeRange: "9:00 AM - 10:00 AM",
-    location: "Client Channel",
-    participants: 8,
-    status: "Scheduled",
-  },
-]
+const API_URL = import.meta.env.VITE_BACKEND
+
+type ApiMeeting = {
+  id: string
+  title: string
+  status: string
+  scheduled_for: string
+  created_at: string
+}
 
 export default function MeetingsPage() {
   const outlet = useOutlet()
@@ -63,21 +47,50 @@ export default function MeetingsPage() {
 
   const [scheduleTitle, setScheduleTitle] = useState("")
   const [scheduleDescription, setScheduleDescription] = useState("")
-  const [scheduleDate, setScheduleDate] = useState("")
+  const [scheduleDate, setScheduleDate] = useState<Date | undefined>(undefined)
   const [scheduleTime, setScheduleTime] = useState("")
   const [inviteeEmail, setInviteeEmail] = useState("")
   const [invitees, setInvitees] = useState<string[]>([])
   const [scheduleError, setScheduleError] = useState("")
   const [scheduleSuccess, setScheduleSuccess] = useState("")
 
-  const totalActionItems = meetingNotes.reduce(
-    (count, note) => count + note.actionItems.length,
-    0
-  )
-  const openActionItems = meetingNotes.reduce(
-    (count, note) => count + note.actionItems.filter((item) => !item.completed).length,
-    0
-  )
+  // Dynamic dashboard data
+  const [upcomingMeeting, setUpcomingMeeting] = useState<ApiMeeting | null>(null)
+  const [recentMeetings, setRecentMeetings] = useState<ApiMeeting[]>([])
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true)
+  const [loadingRecent, setLoadingRecent] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!API_URL || !token) {
+      setLoadingUpcoming(false)
+      setLoadingRecent(false)
+      return
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    }
+
+    // Fetch upcoming meeting
+    fetch(`${API_URL}/api/meetings/next`, { headers })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data) setUpcomingMeeting(json.data)
+      })
+      .catch(console.error)
+      .finally(() => setLoadingUpcoming(false))
+
+    // Fetch recent meetings
+    fetch(`${API_URL}/api/meetings/recent`, { headers })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data && Array.isArray(json.data)) setRecentMeetings(json.data)
+      })
+      .catch(console.error)
+      .finally(() => setLoadingRecent(false))
+  }, [])
   const addInvitee = () => {
     const email = inviteeEmail.trim().toLowerCase()
 
@@ -119,7 +132,8 @@ export default function MeetingsPage() {
       return
     }
 
-    const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`)
+    const dateString = format(scheduleDate, "yyyy-MM-dd")
+    const scheduledAt = new Date(`${dateString}T${scheduleTime}`)
 
     scheduleMeeting({
       id: Date.now(),
@@ -155,12 +169,19 @@ export default function MeetingsPage() {
     setScheduleError("")
     setScheduleTitle("")
     setScheduleDescription("")
-    setScheduleDate("")
+    setScheduleDate(undefined)
     setScheduleTime("")
     setInvitees([])
   }
 
-  const latestNotes = [...meetingNotes].slice(0, 3)
+  const formatApiDate = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" })
+  }
+  const formatApiTime = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  }
 
   return outlet ?? (
     <section className="flex flex-1 flex-col gap-5 p-5">
@@ -199,18 +220,18 @@ export default function MeetingsPage() {
           <CardContent className="grid gap-4 px-5 py-5 md:grid-cols-3">
             <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Upcoming</p>
-              <p className="mt-2 text-3xl font-semibold">{upcomingMeetings.length}</p>
+              <p className="mt-2 text-3xl font-semibold">{upcomingMeeting ? 1 : 0}</p>
               <p className="mt-2 text-sm text-muted-foreground">Meetings queued across today and tomorrow.</p>
             </div>
             <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Open actions</p>
-              <p className="mt-2 text-3xl font-semibold">{openActionItems}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Follow-ups still pending from recent sessions.</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Recent</p>
+              <p className="mt-2 text-3xl font-semibold">{recentMeetings.length}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Completed sessions from your history.</p>
             </div>
             <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Notes ready</p>
-              <p className="mt-2 text-3xl font-semibold">{meetingNotes.length}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{totalActionItems} total action items tracked in notes.</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Total</p>
+              <p className="mt-2 text-3xl font-semibold">{recentMeetings.length + (upcomingMeeting ? 1 : 0)}</p>
+              <p className="mt-2 text-sm text-muted-foreground">All meetings tracked in your workspace.</p>
             </div>
           </CardContent>
         </Card>
@@ -224,18 +245,10 @@ export default function MeetingsPage() {
             <CardDescription>What needs attention before the next handoff.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 px-4 py-4">
-            {[
-              "Join Product Planning before the room goes live.",
-              "Review notes from Design Critique and close open action items.",
-              "Check tomorrow's customer meeting against the calendar before sharing invites.",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-border/70 bg-muted/35 p-3 text-sm leading-6"
-              >
-                {item}
-              </div>
-            ))}
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/70 bg-muted/35 p-6 text-center text-sm leading-6 text-muted-foreground">
+              <Sparkles className="h-8 w-8 mb-2 opacity-20" />
+              You're all caught up for today.
+            </div>
 
             <Separator />
 
@@ -269,12 +282,28 @@ export default function MeetingsPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="schedule-date">Date</Label>
-                    <Input
-                      id="schedule-date"
-                      type="date"
-                      value={scheduleDate}
-                      onChange={(e) => setScheduleDate(e.target.value)}
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal bg-background hover:bg-muted/50 border-border/60",
+                            !scheduleDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {scheduleDate ? format(scheduleDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={scheduleDate}
+                          onSelect={setScheduleDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="schedule-time">Time</Label>
@@ -350,46 +379,45 @@ export default function MeetingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3 px-4 py-4">
-            {upcomingMeetings.map((meeting) => (
-              <div
-                key={meeting.id}
-                className="rounded-2xl border border-border/70 bg-background p-4"
-              >
+            {loadingUpcoming ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : upcomingMeeting ? (
+              <div className="rounded-2xl border border-border/70 bg-background p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-base font-semibold">{meeting.title}</p>
-                      <Badge variant={meeting.status === "Starts in 8 min" ? "default" : "outline"}>
-                        {meeting.status}
-                      </Badge>
+                      <p className="text-base font-semibold">{upcomingMeeting.title}</p>
+                      <Badge variant="outline">{upcomingMeeting.status}</Badge>
                     </div>
-
                     <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4" />
-                        <span>{meeting.dateLabel}</span>
+                        <span>{formatApiDate(upcomingMeeting.scheduled_for)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock3 className="h-4 w-4" />
-                        <span>{meeting.timeRange}</span>
+                        <span>{formatApiTime(upcomingMeeting.scheduled_for)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        <span>{meeting.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        <span>{meeting.participants} attendees</span>
+                        <span>Virtual</span>
                       </div>
                     </div>
                   </div>
-
                   <Button asChild variant="outline" size="sm">
                     <Link to="/meetings/start-meetings">Open room</Link>
                   </Button>
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+                <CalendarDays className="h-10 w-10 mb-3 opacity-20" />
+                <p className="text-base font-medium text-foreground">No upcoming meetings</p>
+                <p className="text-sm mt-1">Schedule a meeting to see it here.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -397,46 +425,49 @@ export default function MeetingsPage() {
           <CardHeader className="border-b border-border/70 py-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <CardTitle>Recent notes</CardTitle>
-                <CardDescription>Jump back into decisions and follow-up items.</CardDescription>
+                <CardTitle>Recent meetings</CardTitle>
+                <CardDescription>Your completed sessions and their details.</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm">
                 <Link to="/meetings/meetings-notes">
-                  All notes
+                  All meetings
                   <ArrowRight />
                 </Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 px-4 py-4">
-            {latestNotes.map((note) => (
-              <Link
-                key={note.id}
-                to={`/meetings/meetings-notes/${note.id}`}
-                className="block rounded-2xl border border-border/70 bg-background p-4 transition hover:bg-muted/30"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-2">
-                    <Badge variant="outline">{note.category}</Badge>
-                    <div>
-                      <p className="font-semibold">{note.title}</p>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        {note.meeting.summary}
-                      </p>
+            {loadingRecent ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : recentMeetings.length > 0 ? (
+              recentMeetings.map((meeting) => (
+                <div
+                  key={meeting.id}
+                  className="rounded-2xl border border-border/70 bg-background p-4 transition hover:bg-muted/30"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-2">
+                      <Badge variant="outline">{meeting.status}</Badge>
+                      <div>
+                        <p className="font-semibold">{meeting.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                          {formatApiDate(meeting.scheduled_for)} • {formatApiTime(meeting.scheduled_for)}
+                        </p>
+                      </div>
                     </div>
+                    <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                   </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                 </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Badge variant="secondary">{note.meeting.dateLabel}</Badge>
-                  <Badge variant="secondary">
-                    <ClipboardList className="h-3.5 w-3.5" />
-                    {note.actionItems.length} action items
-                  </Badge>
-                </div>
-              </Link>
-            ))}
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+                <ClipboardList className="h-10 w-10 mb-3 opacity-20" />
+                <p className="text-base font-medium text-foreground">No recent meetings</p>
+                <p className="text-sm mt-1">Your completed meetings will appear here.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
