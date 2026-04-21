@@ -38,7 +38,7 @@ const VideoItem = React.forwardRef<HTMLDivElement, VideoItemProps>(
             autoPlay
             playsInline
             muted={isLocal || isMuted}
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover ${isLocal ? 'scale-x-[-1]' : ''}`}
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">

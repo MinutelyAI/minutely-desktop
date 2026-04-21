@@ -16,9 +16,15 @@ import GroupsChatPage from "@/pages/chat/groups";
 import { MeetingProvider } from "@/contexts/meeting-context";
 import JoinMeetingPage from "@/pages/meetings/join-meeting";
 
+const GuestRoute = ({ children }: { children: React.ReactNode }) => {
+  const isLoggedIn = localStorage.getItem("auth") === "true" && Boolean(localStorage.getItem("token"));
+  if (isLoggedIn) {
+    return <Navigate to="/meetings" replace />;
+  }
+  return children;
+};
+
 export default function App() {
-  const isLoggedIn =
-    localStorage.getItem("auth") === "true" && Boolean(localStorage.getItem("token"));
   const defaultDashboardRoute = "/meetings";
 
   return (
@@ -28,12 +34,20 @@ export default function App() {
 
         <Route
           path="/login"
-          element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <LoginPage />}
+          element={
+            <GuestRoute>
+              <LoginPage />
+            </GuestRoute>
+          }
         />
 
         <Route
           path="/signup"
-          element={isLoggedIn ? <Navigate to={defaultDashboardRoute} replace /> : <SignupPage />}
+          element={
+            <GuestRoute>
+              <SignupPage />
+            </GuestRoute>
+          }
         />
 
         <Route

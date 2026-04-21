@@ -67,6 +67,16 @@ const data: {
 export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const userEmail = localStorage.getItem("user_email") || "guest@example.com";
+  const userName = userEmail.split("@")[0];
+  const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
+
+  const activeUser = {
+    name: displayName,
+    email: userEmail,
+    avatar: "",
+  };
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -161,7 +171,7 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={activeUser} />
       </SidebarFooter>
     </Sidebar>
   )
