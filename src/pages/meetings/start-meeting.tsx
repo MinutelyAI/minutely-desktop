@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TimePicker } from "@/components/ui/time-picker";
 import { cn } from "@/lib/utils";
 
 const API_URL = import.meta.env.VITE_BACKEND;
@@ -114,6 +115,13 @@ export default function StartMeetingPage() {
     setParticipantError("");
   };
 
+  const handleUnauthorizedSession = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("auth");
+    localStorage.removeItem("user_email");
+    navigate("/login", { replace: true });
+  };
+
   const handleCreateMeeting = async () => {
     if (!meetingTitle.trim()) {
       toast.error("Please enter a meeting title");
@@ -176,6 +184,12 @@ export default function StartMeetingPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          handleUnauthorizedSession();
+          toast.error("Your session expired. Please log in again.");
+          return;
+        }
+
         throw new Error(data.error || data.message || "Failed to start meeting");
       }
 
@@ -229,15 +243,15 @@ export default function StartMeetingPage() {
   };
 
   return (
-    <section className="px-4 md:px-8 lg:px-12 py-6">
+    <section className="px-3 py-4 sm:px-4 sm:py-6 md:px-8 lg:px-12">
 
-      <div className="flex justify-center pb-5">
-        <div className="w-full max-w-2xl grid grid-cols-7 gap-2">
-          <Input type="text" placeholder="Enter meeting link or meeting ID..." className="col-span-5" value={meetingCode} onChange={(e) => {
+      <div className="flex justify-center pb-4 sm:pb-5">
+        <div className="grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-7">
+          <Input type="text" placeholder="Enter meeting link or meeting ID..." className="sm:col-span-5" value={meetingCode} onChange={(e) => {
             setMeetingCode(e.target.value);
             if (joinError) setJoinError("");
           }} />
-          <Button variant="default" className="col-span-2" onClick={handleJoinMeeting}>
+          <Button variant="default" className="w-full sm:col-span-2" onClick={handleJoinMeeting}>
             Join
           </Button>
         </div>
@@ -251,7 +265,7 @@ export default function StartMeetingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4  md:grid-cols-2 items-stretch">
+      <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-2">
         <Card className="w-full h-full">
           <CardHeader>
             <div className="flex items-start justify-between gap-3">
@@ -282,25 +296,25 @@ export default function StartMeetingPage() {
 
             <Label>Meeting Settings</Label>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 w-full">
-              <Toggle variant="outline" pressed={mic} onPressedChange={setMic} className="flex gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <Toggle variant="outline" pressed={mic} onPressedChange={setMic} className="flex w-full items-center gap-2 px-2">
                 {mic ? <Microphone /> : <MicrophoneOff />} <span>Mic</span>
               </Toggle>
-              <Toggle variant="outline" pressed={video} onPressedChange={setVideo} className="flex gap-2">
+              <Toggle variant="outline" pressed={video} onPressedChange={setVideo} className="flex w-full items-center gap-2 px-2">
                 {video ? <Video /> : <VideoOff />} <span>Video</span>
               </Toggle>
-              <Toggle variant="outline" pressed={transcript} onPressedChange={setAITranscription} className="flex gap-2">
+              <Toggle variant="outline" pressed={transcript} onPressedChange={setAITranscription} className="flex w-full items-center gap-2 px-2">
                 {transcript ? <AITranscription /> : <AITranscriptionOff />} <span>Transcript</span>
               </Toggle>
-              <Toggle variant="outline" pressed={notes} onPressedChange={setAINotes} className="flex gap-2">
+              <Toggle variant="outline" pressed={notes} onPressedChange={setAINotes} className="flex w-full items-center gap-2 px-2">
                 {notes ? <AINotes /> : <AINotesOff />} <span>Notes</span>
               </Toggle>
             </div>
 
             <div className="grid gap-3 rounded-xl border bg-muted/20 p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                 <Label className="text-sm">Meeting type</Label>
-                <Toggle variant="outline" pressed={isScheduled} onPressedChange={setIsScheduled} >
+                <Toggle variant="outline" pressed={isScheduled} onPressedChange={setIsScheduled} className="w-full justify-center sm:w-auto" >
                   <CalendarClock className="h-4 w-4" />
                   {isScheduled ? "Scheduled" : "Instant"}
                 </Toggle>
@@ -335,7 +349,7 @@ export default function StartMeetingPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="meeting-time">Time</Label>
-                    <Input id="meeting-time" type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+                    <TimePicker value={scheduledTime} onChange={setScheduledTime} />
                   </div>
                 </div>
               ) : (
@@ -353,10 +367,11 @@ export default function StartMeetingPage() {
               </div>
 
               <div className="grid gap-3">
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
                     type="email"
                     placeholder="Enter participant email"
+                    className="min-w-0"
                     value={participantEmail}
                     onChange={(e) => {
                       setParticipantEmail(e.target.value);
@@ -371,13 +386,13 @@ export default function StartMeetingPage() {
                       }
                     }}
                   />
-                  <Button type="button" variant="outline" onClick={addParticipantByEmail}>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={addParticipantByEmail}>
                     Add
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between gap-4">
-                  <AvatarGroup>
+                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                  <AvatarGroup className="max-w-full overflow-x-auto">
                     {selectedParticipants.map((participant) => (
                       <Avatar key={participant.id}>
                         <AvatarFallback>
@@ -396,7 +411,7 @@ export default function StartMeetingPage() {
                     )}
                   </AvatarGroup>
 
-                  <div className="flex items-center gap-1 text-right text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1 text-left text-sm text-muted-foreground sm:text-right">
                     <span>{selectedParticipants.length} Participants</span>
                     <UserIcon />
                   </div>
@@ -411,9 +426,9 @@ export default function StartMeetingPage() {
                     {selectedParticipants.map((participant) => (
                       <div
                         key={participant.id}
-                        className="flex items-center gap-2 rounded-full border bg-background pl-3 pr-1 py-1 text-sm"
+                        className="flex max-w-full items-center gap-2 rounded-full border bg-background py-1 pl-3 pr-1 text-sm"
                       >
-                        <span>{participant.displayName}</span>
+                        <span className="max-w-[170px] truncate sm:max-w-[220px]">{participant.displayName}</span>
                         <Button
                           variant="ghost"
                           size="icon-xs"
@@ -437,7 +452,7 @@ export default function StartMeetingPage() {
                 <Sparkles className="h-4 w-4" />
                 Ready To Start
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg bg-muted/40 p-3">
                   <div className="mb-1 flex items-center gap-2 text-sm font-medium">
                     <CalendarClock className="h-4 w-4" />
@@ -500,7 +515,7 @@ export default function StartMeetingPage() {
             {upcomingMeetings.length > 0 ? (
               <>
                 <div className="rounded-xl border bg-muted/20 p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
                       <Label className="text-sm">Next Up</Label>
                       <p className="text-sm text-muted-foreground">
@@ -513,14 +528,14 @@ export default function StartMeetingPage() {
                   </div>
 
                   <div className="rounded-xl border bg-background p-4">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start">
                       <div>
                         <p className="font-medium">{upcomingMeetings[0]?.title}</p>
                         <p className="text-sm text-muted-foreground">
                           {upcomingMeetings[0]?.time} · {upcomingMeetings[0]?.duration}
                         </p>
                       </div>
-                      <Button size="sm">
+                      <Button size="sm" className="w-full sm:w-auto">
                         Join
                       </Button>
                     </div>
@@ -539,7 +554,7 @@ export default function StartMeetingPage() {
                 </div>
 
                 <div className="rounded-xl border p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
                       <Label className="text-sm">Upcoming Meeting</Label>
                     </div>
@@ -551,7 +566,7 @@ export default function StartMeetingPage() {
                   <div className="space-y-3">
                     {upcomingMeetings.map((meeting) => (
                       <div key={meeting.id} className="rounded-lg border p-3 transition hover:bg-muted/40" >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start">
                           <div>
                             <p className="font-medium">{meeting.title}</p>
                             <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
@@ -567,6 +582,7 @@ export default function StartMeetingPage() {
                           </div>
                           <Button
                             size="sm"
+                            className="w-full sm:w-auto"
                             variant={meeting.joinable ? "default" : "outline"}
                           >
                             {meeting.joinable ? "Join" : "View"}

@@ -140,7 +140,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="user@example.com"
                 required
                 value={form.email}
                 onChange={handleChange}

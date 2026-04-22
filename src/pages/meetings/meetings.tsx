@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
+import { TimePicker } from "@/components/ui/time-picker"
 import {
   Card,
   CardContent,
@@ -184,7 +185,7 @@ export default function MeetingsPage() {
   }
 
   return outlet ?? (
-    <section className="flex flex-1 flex-col gap-5 p-5">
+    <section className="flex flex-1 flex-col gap-4 p-3 sm:gap-5 sm:p-5">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
         <Card className="border border-border/60 bg-card/95 py-0">
           <CardHeader className="border-b border-border/70 bg-gradient-to-r from-background via-primary/5 to-background py-6">
@@ -200,24 +201,24 @@ export default function MeetingsPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button asChild>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                <Button asChild className="w-full sm:w-auto">
                   <Link to="/meetings/start-meetings">
                     Start instant meeting
                     <ArrowRight />
                   </Link>
                 </Button>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
                   <Link to="/meetings/meetings-notes">Open notes</Link>
                 </Button>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="w-full sm:w-auto">
                   <Link to="/meetings/calender">View calendar</Link>
                 </Button>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="grid gap-4 px-5 py-5 md:grid-cols-3">
+          <CardContent className="grid gap-4 px-4 py-4 sm:px-5 sm:py-5 md:grid-cols-3">
             <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Upcoming</p>
               <p className="mt-2 text-3xl font-semibold">{upcomingMeeting ? 1 : 0}</p>
@@ -307,25 +308,20 @@ export default function MeetingsPage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="schedule-time">Time</Label>
-                    <Input
-                      id="schedule-time"
-                      type="time"
-                      value={scheduleTime}
-                      onChange={(e) => setScheduleTime(e.target.value)}
-                    />
+                    <TimePicker value={scheduleTime} onChange={setScheduleTime} />
                   </div>
                 </div>
 
                 <div className="grid gap-2">
                   <Label htmlFor="invitee-email">Invitees</Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       id="invitee-email"
                       placeholder="Enter invitee email"
                       value={inviteeEmail}
                       onChange={(e) => setInviteeEmail(e.target.value)}
                     />
-                    <Button type="button" onClick={addInvitee}>
+                    <Button type="button" className="w-full sm:w-auto" onClick={addInvitee}>
                       Add
                     </Button>
                   </div>
@@ -365,12 +361,12 @@ export default function MeetingsPage() {
 
         <Card className="border border-border/60 bg-card/95 py-0">
           <CardHeader className="border-b border-border/70 py-5">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <div>
                 <CardTitle>Upcoming meetings</CardTitle>
                 <CardDescription>Fast access to the sessions that are next in line.</CardDescription>
               </div>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="w-full sm:w-auto">
                 <Link to="/meetings/calender">
                   Calendar
                   <ArrowRight />
@@ -406,7 +402,7 @@ export default function MeetingsPage() {
                       </div>
                     </div>
                   </div>
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                     <Link to="/meetings/start-meetings">Open room</Link>
                   </Button>
                 </div>
@@ -423,12 +419,12 @@ export default function MeetingsPage() {
 
         <Card className="border border-border/60 bg-card/95 py-0">
           <CardHeader className="border-b border-border/70 py-5">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <div>
                 <CardTitle>Recent meetings</CardTitle>
                 <CardDescription>Your completed sessions and their details.</CardDescription>
               </div>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="w-full sm:w-auto">
                 <Link to="/meetings/meetings-notes">
                   All meetings
                   <ArrowRight />
@@ -447,7 +443,7 @@ export default function MeetingsPage() {
                   key={meeting.id}
                   className="rounded-2xl border border-border/70 bg-background p-4 transition hover:bg-muted/30"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start">
                     <div className="space-y-2">
                       <Badge variant="outline">{meeting.status}</Badge>
                       <div>

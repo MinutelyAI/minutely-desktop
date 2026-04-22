@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Separator } from "../ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TimePicker } from "@/components/ui/time-picker";
 import { CalendarIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -185,11 +186,7 @@ export default function StartMeetingSheet({
                     />
                   </PopoverContent>
                 </Popover>
-                <Input
-                  type="time"
-                  value={scheduledTime}
-                  onChange={(e) => onScheduledTimeChange(e.target.value)}
-                />
+                <TimePicker value={scheduledTime} onChange={onScheduledTimeChange} />
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">

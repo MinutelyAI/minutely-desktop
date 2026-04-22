@@ -23,11 +23,25 @@ const createWindow = () => {
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.webContents.once("did-finish-load", () => {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
+    });
   } else {
     mainWindow.loadFile(
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
     );
   }
+
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    const isDevToolsShortcut =
+      input.key === "F12" ||
+      (input.control || input.meta) && input.shift && input.key.toLowerCase() === "i";
+
+    if (isDevToolsShortcut) {
+      event.preventDefault();
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();

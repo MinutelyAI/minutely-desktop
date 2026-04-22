@@ -220,7 +220,7 @@ export default function ActiveMeetingPage() {
 
   if (!activeMeeting) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>No Active Meeting</CardTitle>
@@ -262,9 +262,9 @@ export default function ActiveMeetingPage() {
   };
 
   return (
-    <section className="flex h-full flex-col gap-4 p-5">
+    <section className="flex h-full flex-col gap-4 p-3 sm:p-5">
       {/* Meeting Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold">{activeMeeting.title || 'Instant Meeting'}</h1>
           <p className="text-sm text-muted-foreground">
@@ -288,7 +288,7 @@ export default function ActiveMeetingPage() {
 
       {/* Main Video Grid */}
       <Card className="flex-1 overflow-hidden">
-        <CardContent className="h-full p-4">
+        <CardContent className="h-full p-2 sm:p-4">
           {mediaStream.isLoading ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-muted-foreground">Requesting camera and microphone access...</p>
@@ -308,8 +308,8 @@ export default function ActiveMeetingPage() {
       {/* Meeting Controls */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-2">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
               <Button
                 variant={micEnabled ? 'default' : 'secondary'}
                 size="lg"
@@ -353,9 +353,10 @@ export default function ActiveMeetingPage() {
               </Button>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setEndType('leave');
                   setShowEndDialog(true);
@@ -367,6 +368,7 @@ export default function ActiveMeetingPage() {
 
               <Button
                 variant="destructive"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setEndType('endForAll');
                   setShowEndDialog(true);
