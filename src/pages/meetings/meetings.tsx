@@ -76,18 +76,34 @@ export default function MeetingsPage() {
 
     // Fetch upcoming meeting
     fetch(`${API_URL}/api/meetings/next`, { headers })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("token")
+          localStorage.removeItem("auth")
+          window.location.href = "/login"
+          throw new Error("Unauthorized")
+        }
+        return res.json()
+      })
       .then((json) => {
-        if (json.data) setUpcomingMeeting(json.data)
+        if (json && json.data) setUpcomingMeeting(json.data)
       })
       .catch(console.error)
       .finally(() => setLoadingUpcoming(false))
 
     // Fetch recent meetings
     fetch(`${API_URL}/api/meetings/recent`, { headers })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("token")
+          localStorage.removeItem("auth")
+          window.location.href = "/login"
+          throw new Error("Unauthorized")
+        }
+        return res.json()
+      })
       .then((json) => {
-        if (json.data && Array.isArray(json.data)) setRecentMeetings(json.data)
+        if (json && json.data && Array.isArray(json.data)) setRecentMeetings(json.data)
       })
       .catch(console.error)
       .finally(() => setLoadingRecent(false))
