@@ -49,7 +49,7 @@ export default function StartMeetingSheet({
   onOpenChange,
 }: StartMeetingSheetProps) {
 
-  const noParticipants = () => participants.length < 0
+  const noParticipants = () => participants.length === 0
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

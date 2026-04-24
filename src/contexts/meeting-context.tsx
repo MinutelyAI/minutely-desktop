@@ -1,11 +1,12 @@
-import React, { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { ActiveMeeting, ScheduledMeeting } from '@/types';
+import { apiClient } from '@/lib/api-client';
 
 type MeetingContextType = {
   activeMeeting: ActiveMeeting | null;
   scheduledMeetings: ScheduledMeeting[];
   createMeeting: (meeting: ActiveMeeting) => void;
-  scheduleMeeting: (meeting: ScheduledMeeting) => void;
+  scheduleMeeting: (meeting: ScheduledMeeting) => Promise<void>;
   endMeeting: (forAll: boolean) => void;
   updateMeeting: (updates: Partial<ActiveMeeting>) => void;
 };
@@ -16,22 +17,79 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
   const [activeMeeting, setActiveMeeting] = useState<ActiveMeeting | null>(null);
   const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>([]);
 
+  // Load scheduled meetings from the API on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    apiClient('/api/meetings/next')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json && json.data) {
+          const m = json.data;
+          setScheduledMeetings([{
+            id: m.id,
+            title: m.title,
+            category: 'Internal',
+            scheduledAt: new Date(m.scheduled_for),
+            meeting: {
+              id: m.id,
+              title: m.title,
+              dateLabel: new Date(m.scheduled_for).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                weekday: 'short',
+              }),
+              timeRange: new Date(m.scheduled_for).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+              }),
+              duration: '30 min',
+              location: 'Virtual',
+              organizer: 'You',
+              participants: [],
+              summary: m.notes ?? '',
+            },
+          }]);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   const createMeeting = useCallback((meeting: ActiveMeeting) => {
     setActiveMeeting(meeting);
   }, []);
 
-  const scheduleMeeting = useCallback((meeting: ScheduledMeeting) => {
+  // Posts to the API and updates local state on success
+  const scheduleMeeting = useCallback(async (meeting: ScheduledMeeting) => {
+    const scheduledAt = meeting.scheduledAt instanceof Date
+      ? meeting.scheduledAt
+      : new Date(meeting.scheduledAt);
+
+    const response = await apiClient('/api/meetings/schedule', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: meeting.title,
+        description: meeting.meeting?.summary ?? '',
+        scheduled_for: scheduledAt.toISOString(),
+        participants: meeting.meeting?.participants?.map((p) => p.email) ?? [],
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to schedule meeting');
+    }
+
+    // Update local state so the calendar reflects it immediately
     setScheduledMeetings((current) => [...current, meeting]);
   }, []);
 
   const endMeeting = useCallback((forAll: boolean) => {
     if (activeMeeting) {
       if (forAll) {
-        // End for all participants
         setActiveMeeting(null);
       } else {
-        // Just mark current user as left
-        // In a real app, this would send a leave event to the backend
         console.log('User left meeting:', activeMeeting.id);
       }
     }

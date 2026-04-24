@@ -1,5 +1,6 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, nativeImage } from "electron";
 import path from "node:path";
+import fs from "node:fs";
 import started from "electron-squirrel-startup";
 
 if (started) {
@@ -12,10 +13,32 @@ if (customUserDataDir) {
 }
 
 const createWindow = () => {
+  const rootPath = process.cwd();
+  const pngPath = path.resolve(rootPath, "assets", "icon.png");
+  const icoPath = path.resolve(rootPath, "assets", "icon.ico");
+  
+  let iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, "assets", "icon.ico")
+    : pngPath;
+
+  let image = nativeImage.createFromPath(iconPath);
+
+  if (!app.isPackaged && image.isEmpty()) {
+    console.log("PNG icon failed or missing, trying ICO...");
+    iconPath = icoPath;
+    image = nativeImage.createFromPath(iconPath);
+  }
+
+  if (image.isEmpty()) {
+    console.error("Failed to load both PNG and ICO icons.");
+    console.log("Paths tried:", pngPath, icoPath);
+  }
+
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     show: false,
+    icon: image.isEmpty() ? undefined : image,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },

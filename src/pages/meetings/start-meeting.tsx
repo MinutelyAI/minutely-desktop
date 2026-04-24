@@ -41,8 +41,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TimePicker } from "@/components/ui/time-picker";
 import { cn } from "@/lib/utils";
-
-const API_URL = import.meta.env.VITE_BACKEND;
+import { apiClient } from "@/lib/api-client";
+import { useEffect } from "react";
 
 
 export default function StartMeetingPage() {
@@ -65,7 +65,28 @@ export default function StartMeetingPage() {
   const [joinError, setJoinError] = useState("");
 
   const [openStartMeeting, setOpenStartMeeting] = useState(false);
-  const upcomingMeetings: any[] = [];
+  const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
+
+  useEffect(() => {
+    apiClient("/api/meetings/next")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json && json.data) {
+          setUpcomingMeetings([{
+            id: json.data.id,
+            title: json.data.title,
+            time: new Date(json.data.scheduled_for).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+            duration: "30 min",
+            room: "Virtual",
+            attendees: 1,
+            status: json.data.status,
+            joinable: true
+          }]);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   const activeTools = [
     mic ? "Microphone on" : "Microphone off",
     video ? "Camera on" : "Camera off",
@@ -115,13 +136,6 @@ export default function StartMeetingPage() {
     setParticipantError("");
   };
 
-  const handleUnauthorizedSession = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("auth");
-    localStorage.removeItem("user_email");
-    navigate("/login", { replace: true });
-  };
-
   const handleCreateMeeting = async () => {
     if (!meetingTitle.trim()) {
       toast.error("Please enter a meeting title");
@@ -136,60 +150,49 @@ export default function StartMeetingPage() {
 
       const dateString = format(scheduledDate, "yyyy-MM-dd");
       const scheduledAt = new Date(`${dateString}T${scheduledTime}`);
-      scheduleMeeting({
-        id: Date.now(),
-        title: meetingTitle.trim(),
-        category: "Internal",
-        scheduledAt,
-        meeting: {
+
+      try {
+        await scheduleMeeting({
           id: Date.now(),
           title: meetingTitle.trim(),
-          dateLabel: scheduledAt.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            weekday: "short",
-          }),
-          timeRange: scheduledAt.toLocaleTimeString("en-US", {
-            hour: "numeric",
-            minute: "2-digit",
-          }),
-          duration: "30 min",
-          location: "Virtual",
-          organizer: "You",
-          participants: selectedParticipants,
-          summary: quickNote,
-        },
-      });
-
-      setOpenStartMeeting(false);
-      navigate("/meetings/calender");
-      return;
-    }
-
-    if (!API_URL) {
-      toast.error("Backend URL is not configured.");
+          category: "Internal",
+          scheduledAt,
+          meeting: {
+            id: Date.now(),
+            title: meetingTitle.trim(),
+            dateLabel: scheduledAt.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              weekday: "short",
+            }),
+            timeRange: scheduledAt.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            }),
+            duration: "30 min",
+            location: "Virtual",
+            organizer: "You",
+            participants: selectedParticipants,
+            summary: quickNote,
+          },
+        });
+        toast.success("Meeting scheduled successfully!");
+        setOpenStartMeeting(false);
+        navigate("/meetings/calender");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to schedule meeting");
+      }
       return;
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/api/meetings/instant`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+      const response = await apiClient("/api/meetings/instant", {
+        method: "POST"
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 401) {
-          handleUnauthorizedSession();
-          toast.error("Your session expired. Please log in again.");
-          return;
-        }
-
         throw new Error(data.error || data.message || "Failed to start meeting");
       }
 
@@ -553,18 +556,19 @@ export default function StartMeetingPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border p-4">
-                  <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                    <div>
-                      <Label className="text-sm">Upcoming Meeting</Label>
+                {upcomingMeetings.slice(1).length > 0 && (
+                  <div className="rounded-xl border p-4">
+                    <div className="mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                      <div>
+                        <Label className="text-sm">More Upcoming</Label>
+                      </div>
+                      <span className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
+                        {upcomingMeetings.slice(1).length} more
+                      </span>
                     </div>
-                    <span className="rounded-full border px-3 py-1 text-xs text-muted-foreground">
-                      {upcomingMeetings.length} meetings
-                    </span>
-                  </div>
 
-                  <div className="space-y-3">
-                    {upcomingMeetings.map((meeting) => (
+                    <div className="space-y-3">
+                      {upcomingMeetings.slice(1).map((meeting) => (
                       <div key={meeting.id} className="rounded-lg border p-3 transition hover:bg-muted/40" >
                         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start">
                           <div>
@@ -604,6 +608,7 @@ export default function StartMeetingPage() {
                     ))}
                   </div>
                 </div>
+                )}
               </>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">

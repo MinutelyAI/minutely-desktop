@@ -1,4 +1,4 @@
-import { Link, useOutlet } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 import {
   ArrowRight,
@@ -8,9 +8,9 @@ import {
   Loader2,
   MapPin,
   Sparkles,
-  Users,
   X,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { useMeeting } from "@/contexts/meeting-context"
 import { Badge } from "@/components/ui/badge"
@@ -42,8 +42,9 @@ type ApiMeeting = {
   created_at: string
 }
 
-export default function MeetingsPage() {
-  const outlet = useOutlet()
+import { apiClient } from "@/lib/api-client"
+
+export default function MeetingsDashboard() {
   const { scheduleMeeting } = useMeeting()
 
   const [scheduleTitle, setScheduleTitle] = useState("")
@@ -62,29 +63,9 @@ export default function MeetingsPage() {
   const [loadingRecent, setLoadingRecent] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!API_URL || !token) {
-      setLoadingUpcoming(false)
-      setLoadingRecent(false)
-      return
-    }
-
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    }
-
     // Fetch upcoming meeting
-    fetch(`${API_URL}/api/meetings/next`, { headers })
-      .then((res) => {
-        if (res.status === 401) {
-          localStorage.removeItem("token")
-          localStorage.removeItem("auth")
-          window.location.href = "/login"
-          throw new Error("Unauthorized")
-        }
-        return res.json()
-      })
+    apiClient("/api/meetings/next")
+      .then((res) => res.json())
       .then((json) => {
         if (json && json.data) setUpcomingMeeting(json.data)
       })
@@ -92,16 +73,8 @@ export default function MeetingsPage() {
       .finally(() => setLoadingUpcoming(false))
 
     // Fetch recent meetings
-    fetch(`${API_URL}/api/meetings/recent`, { headers })
-      .then((res) => {
-        if (res.status === 401) {
-          localStorage.removeItem("token")
-          localStorage.removeItem("auth")
-          window.location.href = "/login"
-          throw new Error("Unauthorized")
-        }
-        return res.json()
-      })
+    apiClient("/api/meetings/recent")
+      .then((res) => res.json())
       .then((json) => {
         if (json && json.data && Array.isArray(json.data)) setRecentMeetings(json.data)
       })
@@ -136,7 +109,7 @@ export default function MeetingsPage() {
     setScheduleError("")
   }
 
-  const handleScheduleMeeting = () => {
+  const handleScheduleMeeting = async () => {
     if (!scheduleTitle.trim() || !scheduleDescription.trim() || !scheduleDate || !scheduleTime) {
       setScheduleError("Please complete title, description, date, and time.")
       setScheduleSuccess("")
@@ -152,43 +125,50 @@ export default function MeetingsPage() {
     const dateString = format(scheduleDate, "yyyy-MM-dd")
     const scheduledAt = new Date(`${dateString}T${scheduleTime}`)
 
-    scheduleMeeting({
-      id: Date.now(),
-      title: scheduleTitle.trim(),
-      category: "Internal",
-      scheduledAt,
-      meeting: {
+    try {
+      await scheduleMeeting({
         id: Date.now(),
         title: scheduleTitle.trim(),
-        dateLabel: scheduledAt.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          weekday: "short",
-        }),
-        timeRange: scheduledAt.toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-        }),
-        duration: "30 min",
-        location: "Virtual",
-        organizer: "You",
-        participants: invitees.map((email, index) => ({
-          id: Date.now() + index,
-          displayName: email.split("@")[0],
-          email,
-          username: email.split("@")[0],
-        })),
-        summary: scheduleDescription.trim(),
-      },
-    })
+        category: "Internal",
+        scheduledAt,
+        meeting: {
+          id: Date.now(),
+          title: scheduleTitle.trim(),
+          dateLabel: scheduledAt.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            weekday: "short",
+          }),
+          timeRange: scheduledAt.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+          duration: "30 min",
+          location: "Virtual",
+          organizer: "You",
+          participants: invitees.map((email, index) => ({
+            id: Date.now() + index,
+            displayName: email.split("@")[0],
+            email,
+            username: email.split("@")[0],
+          })),
+          summary: scheduleDescription.trim(),
+        },
+      })
 
-    setScheduleSuccess("Meeting scheduled successfully.")
-    setScheduleError("")
-    setScheduleTitle("")
-    setScheduleDescription("")
-    setScheduleDate(undefined)
-    setScheduleTime("")
-    setInvitees([])
+      toast.success("Meeting scheduled successfully!")
+      setScheduleSuccess("Meeting scheduled successfully.")
+      setScheduleError("")
+      setScheduleTitle("")
+      setScheduleDescription("")
+      setScheduleDate(undefined)
+      setScheduleTime("")
+      setInvitees([])
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to schedule meeting"
+      setScheduleError(msg)
+      toast.error(msg)
+    }
   }
 
   const formatApiDate = (dateStr: string) => {
@@ -200,7 +180,7 @@ export default function MeetingsPage() {
     return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
   }
 
-  return outlet ?? (
+  return (
     <section className="flex flex-1 flex-col gap-4 p-3 sm:gap-5 sm:p-5">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
         <Card className="border border-border/60 bg-card/95 py-0">
