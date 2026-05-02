@@ -1,11 +1,10 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card"
-import { Field, FieldDescription, FieldGroup, FieldLabel, } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Button } from "@minutely/shared/ui"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@minutely/shared/ui"
+import { Field, FieldDescription, FieldGroup, FieldLabel, } from "@minutely/shared/ui"
+import { Input } from "@minutely/shared/ui"
 import { useState } from "react"
 import { useNavigate } from "react-router"
-
-const API_URL = import.meta.env.VITE_BACKEND;
+import { minutelyApi } from "@/lib/api-client"
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
@@ -61,16 +60,9 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
     try {
       setLoading(true)
 
-      const res = await fetch(`${API_URL}/api/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-        }),
+      const res = await minutelyApi.signup({
+        email: form.email,
+        password: form.password,
       })
 
       const data = await res.json()

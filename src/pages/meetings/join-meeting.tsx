@@ -5,10 +5,9 @@ import ActiveMeetingPage from "@/pages/meetings/active-meeting";
 import { useMeeting } from "@/contexts/meeting-context";
 import { getMeetingPeerEmail } from "@/lib/participant-identity";
 import type { ActiveMeeting } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
-const API_URL = import.meta.env.VITE_BACKEND;
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@minutely/shared/ui";
+import { Button } from "@minutely/shared/ui";
+import { minutelyApi } from "@/lib/api-client";
 
 export default function JoinMeetingPage() {
   const { meetingId } = useParams();
@@ -25,12 +24,6 @@ export default function JoinMeetingPage() {
         return;
       }
 
-      if (!API_URL) {
-        setError("Backend URL is not configured.");
-        setLoading(false);
-        return;
-      }
-
       const token = localStorage.getItem("token");
       const email = getMeetingPeerEmail(localStorage.getItem("user_email"));
       if (!token || !email) {
@@ -40,7 +33,7 @@ export default function JoinMeetingPage() {
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/meetings/validate?id=${encodeURIComponent(meetingId)}`);
+        const response = await minutelyApi.validateMeeting(meetingId);
         const data = await response.json();
 
         if (!response.ok) {
@@ -48,19 +41,12 @@ export default function JoinMeetingPage() {
         }
 
         const meeting = data.meeting;
-        const participantResponse = await fetch(`${API_URL}/api/meetings/participant/state`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            meeting_id: String(meeting.id),
-            email,
-            has_joined: true,
-            audio_enabled: true,
-            video_enabled: true,
-          }),
+        const participantResponse = await minutelyApi.updateParticipantState({
+          meeting_id: String(meeting.id),
+          email,
+          has_joined: true,
+          audio_enabled: true,
+          video_enabled: true,
         });
 
         if (!participantResponse.ok) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { minutelyApiRoutes, minutelyApiUrls } from "@minutely/shared/api";
 
 type SignalType = "offer" | "answer" | "ice-candidate";
 
@@ -106,9 +107,9 @@ export function useWebRTC({
     type: SignalType,
     payload: { sdp?: string; candidate?: string; sdp_mid?: string; sdp_mline_index?: number }
   ) => {
-    if (!token || !apiUrl) return;
+    if (!token) return;
 
-    const response = await fetch(`${apiUrl}/api/webrtc/signal`, {
+    const response = await fetch(`${apiUrl}${minutelyApiRoutes.webrtc.signal}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -167,7 +168,7 @@ export function useWebRTC({
   };
 
   useEffect(() => {
-    if (!meetingId || !localEmail || !token || !apiUrl || !localStream) {
+    if (!meetingId || !localEmail || !token || !localStream) {
       return;
     }
 
@@ -214,7 +215,7 @@ export function useWebRTC({
   }, [localStream]);
 
   useEffect(() => {
-    if (!meetingId || !localEmail || !token || !apiUrl) {
+    if (!meetingId || !localEmail || !token) {
       return;
     }
 
@@ -224,7 +225,11 @@ export function useWebRTC({
       if (cancelled) return;
       try {
         const response = await fetch(
-          `${apiUrl}/api/webrtc/signals?meeting_id=${encodeURIComponent(meetingId)}&email=${encodeURIComponent(localEmail)}&since=${lastSignalIdRef.current}`,
+          `${apiUrl}${minutelyApiUrls.webrtcSignals({
+            meetingId,
+            email: localEmail,
+            since: lastSignalIdRef.current,
+          })}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -6,13 +6,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@minutely/shared/ui";
 import { CalendarDays, ChevronRight, ClipboardList, Users } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@minutely/shared/ui";
+import { Button } from "@minutely/shared/ui";
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@minutely/shared/ui";
 
 export default function MeetingNotesPage() {
   const outlet = useOutlet();
@@ -35,7 +35,7 @@ export default function MeetingNotesPage() {
         <Input type="search"
           placeholder="Search meeting notes..."
           className="w-sm"
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
         />
         <Button>
           Filter

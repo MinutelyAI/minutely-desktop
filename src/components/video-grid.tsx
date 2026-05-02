@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@minutely/shared/ui';
+import { Badge } from '@minutely/shared/ui';
 import { useVideoStream } from '@/hooks/use-media-stream';
 
 interface VideoItemProps {

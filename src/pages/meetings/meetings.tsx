@@ -13,26 +13,25 @@ import {
 import { toast } from "sonner"
 
 import { useMeeting } from "@/contexts/meeting-context"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui"
+import { Calendar } from "@minutely/shared/ui"
+import { Popover, PopoverContent, PopoverTrigger } from "@minutely/shared/ui"
 import { format } from "date-fns"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
-import { TimePicker } from "@/components/ui/time-picker"
+import { Input } from "@minutely/shared/ui"
+import { Label } from "@minutely/shared/ui"
+import { Textarea } from "@minutely/shared/ui"
+import { Separator } from "@minutely/shared/ui"
+import { TimePicker } from "@minutely/shared/ui"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-
-const API_URL = import.meta.env.VITE_BACKEND
+} from "@minutely/shared/ui"
+import { cn } from "@minutely/shared/utils"
+import { minutelyApi } from "@/lib/api-client"
 
 type ApiMeeting = {
   id: string
@@ -41,8 +40,6 @@ type ApiMeeting = {
   scheduled_for: string
   created_at: string
 }
-
-import { apiClient } from "@/lib/api-client"
 
 export default function MeetingsDashboard() {
   const { scheduleMeeting } = useMeeting()
@@ -64,7 +61,7 @@ export default function MeetingsDashboard() {
 
   useEffect(() => {
     // Fetch upcoming meeting
-    apiClient("/api/meetings/next")
+    minutelyApi.getNextMeeting()
       .then((res) => res.json())
       .then((json) => {
         if (json && json.data) setUpcomingMeeting(json.data)
@@ -73,7 +70,7 @@ export default function MeetingsDashboard() {
       .finally(() => setLoadingUpcoming(false))
 
     // Fetch recent meetings
-    apiClient("/api/meetings/recent")
+    minutelyApi.getRecentMeetings()
       .then((res) => res.json())
       .then((json) => {
         if (json && json.data && Array.isArray(json.data)) setRecentMeetings(json.data)
@@ -262,7 +259,7 @@ export default function MeetingsDashboard() {
                     id="schedule-title"
                     placeholder="Meeting title"
                     value={scheduleTitle}
-                    onChange={(e) => setScheduleTitle(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setScheduleTitle(e.target.value)}
                   />
                 </div>
 
@@ -272,7 +269,7 @@ export default function MeetingsDashboard() {
                     id="schedule-description"
                     placeholder="Meeting description"
                     value={scheduleDescription}
-                    onChange={(e) => setScheduleDescription(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setScheduleDescription(e.target.value)}
                   />
                 </div>
 
@@ -315,7 +312,7 @@ export default function MeetingsDashboard() {
                       id="invitee-email"
                       placeholder="Enter invitee email"
                       value={inviteeEmail}
-                      onChange={(e) => setInviteeEmail(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInviteeEmail(e.target.value)}
                     />
                     <Button type="button" className="w-full sm:w-auto" onClick={addInvitee}>
                       Add

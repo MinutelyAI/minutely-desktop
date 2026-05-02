@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { ActiveMeeting, ScheduledMeeting } from '@/types';
-import { apiClient } from '@/lib/api-client';
+import { minutelyApi } from '@/lib/api-client';
 
 type MeetingContextType = {
   activeMeeting: ActiveMeeting | null;
@@ -22,7 +22,7 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    apiClient('/api/meetings/next')
+    minutelyApi.getNextMeeting()
       .then((res) => res.json())
       .then((json) => {
         if (json && json.data) {
@@ -66,14 +66,11 @@ export function MeetingProvider({ children }: { children: ReactNode }) {
       ? meeting.scheduledAt
       : new Date(meeting.scheduledAt);
 
-    const response = await apiClient('/api/meetings/schedule', {
-      method: 'POST',
-      body: JSON.stringify({
-        title: meeting.title,
-        description: meeting.meeting?.summary ?? '',
-        scheduled_for: scheduledAt.toISOString(),
-        participants: meeting.meeting?.participants?.map((p) => p.email) ?? [],
-      }),
+    const response = await minutelyApi.scheduleMeeting({
+      title: meeting.title,
+      description: meeting.meeting?.summary ?? '',
+      scheduled_for: scheduledAt.toISOString(),
+      participants: meeting.meeting?.participants?.map((p) => p.email) ?? [],
     });
 
     if (!response.ok) {

@@ -8,15 +8,15 @@ import {
   Users,
 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@minutely/shared/ui"
 
 const chatSections = [
   {

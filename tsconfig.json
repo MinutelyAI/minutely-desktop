@@ -10,7 +10,9 @@
     "baseUrl": ".",
     "outDir": "dist",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
     },
     "types": ["vite/client", "react", "react-dom"],
     "jsx": "react-jsx",

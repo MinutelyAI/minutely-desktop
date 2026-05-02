@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react"
 import { Search, SendHorizonal, Users } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+} from "@minutely/shared/ui"
+import { Input } from "@minutely/shared/ui"
+import { Textarea } from "@minutely/shared/ui"
+import { cn } from "@minutely/shared/utils"
 
 const groups: any[] = []
 

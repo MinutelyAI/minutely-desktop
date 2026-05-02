@@ -1,13 +1,12 @@
 import { useState } from "react"
 import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { Avatar, AvatarFallback, AvatarImage } from "@minutely/shared/ui"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@minutely/shared/ui"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@minutely/shared/ui"
 import { useNavigate } from "react-router-dom"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-
-const API_URL = import.meta.env.VITE_BACKEND;
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui"
+import { minutelyApi } from "@/lib/api-client"
 
 export default function NavUser({
   user,
@@ -28,32 +27,22 @@ export default function NavUser({
   const userInitials = user?.name ? user.name.charAt(0).toUpperCase() : "U";
 
   const handleLogout = async () => {
-  const token = localStorage.getItem("token")
-
-  try {
-    if (API_URL) {
-      const res = await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      })
+    try {
+      const res = await minutelyApi.logout()
 
       if (!res.ok) {
         const text = await res.text()
         console.error("Logout error response:", text)
       }
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      localStorage.removeItem("token")
+      localStorage.removeItem("auth")
+      localStorage.removeItem("user_email")
+      navigate("/login")
     }
-  } catch (error) {
-    console.error("Logout error:", error)
-  } finally {
-    localStorage.removeItem("token")
-    localStorage.removeItem("auth")
-    localStorage.removeItem("user_email")
-    navigate("/login")
   }
-}
   
   return (
     <SidebarMenu>

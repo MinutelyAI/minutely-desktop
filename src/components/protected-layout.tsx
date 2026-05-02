@@ -3,8 +3,8 @@ import { Link, Outlet, useLocation } from "react-router-dom"
 import { meetingNotes } from "@/mock"
 
 import { AppSidebar as Sidebar } from "@/components/sidebar"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, } from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +13,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Separator } from "@/components/ui/separator"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+} from "@minutely/shared/ui"
+import { Separator } from "@minutely/shared/ui"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@minutely/shared/ui"
 import { BellIcon as Notif } from '@heroicons/react/24/outline'
 import { BellIcon as NotifOpen } from '@heroicons/react/24/solid'
 import { CheckCheck, Dot, Trash2 } from "lucide-react"

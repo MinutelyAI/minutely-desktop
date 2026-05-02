@@ -1,10 +1,10 @@
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui";
+import { Label } from "@minutely/shared/ui";
+import { Input } from "@minutely/shared/ui";
+import { Textarea } from "@minutely/shared/ui";
 import { MeetingParticipant, StartMeetingSheetProps } from "@/types";
-import { Toggle } from "../ui/toggle";
+import { Toggle } from "@minutely/shared/ui";
 import {
   MicrophoneIcon as Microphone,
   MicrophoneSlashIcon as MicrophoneOff,
@@ -15,14 +15,14 @@ import {
   PencilSimpleSlashIcon as AINotesOff,
   PencilSimpleIcon as AINotes,
 } from "@phosphor-icons/react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Separator } from "../ui/separator";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TimePicker } from "@/components/ui/time-picker";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@minutely/shared/ui";
+import { Separator } from "@minutely/shared/ui";
+import { Calendar } from "@minutely/shared/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@minutely/shared/ui";
+import { TimePicker } from "@minutely/shared/ui";
 import { CalendarIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "@minutely/shared/utils";
 
 export default function StartMeetingSheet({
   meetingTitle,
@@ -67,7 +67,7 @@ export default function StartMeetingSheet({
               id="start-meeting-title"
               placeholder="Enter meeting title"
               value={meetingTitle}
-              onChange={(e) => onMeetingTitleChange(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onMeetingTitleChange(e.target.value)}
             />
           </div>
           <div className="grid gap-3">
@@ -76,7 +76,7 @@ export default function StartMeetingSheet({
               id="start-meeting-notes"
               placeholder="Agenda or context"
               value={quickNote}
-              onChange={(e) => onQuickNoteChange(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onQuickNoteChange(e.target.value)}
             />
           </div>
           <Separator />

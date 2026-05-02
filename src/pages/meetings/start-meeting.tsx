@@ -1,14 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@minutely/shared/ui";
+import { Button } from "@minutely/shared/ui";
+import { Toggle } from "@minutely/shared/ui";
+import { Input } from "@minutely/shared/ui";
+import { Label } from "@minutely/shared/ui";
+import { Textarea } from "@minutely/shared/ui";
 import {
   Avatar,
   AvatarFallback,
   AvatarGroup,
-} from "@/components/ui/avatar";
+} from "@minutely/shared/ui";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,7 +23,7 @@ import {
   PencilSimpleIcon as AINotes,
 } from "@phosphor-icons/react/dist/ssr";
 import StartMeetingSheet from "@/components/start-meeting/start-meeting-sheet";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@minutely/shared/ui";
 import {
   CalendarClock,
   Clock,
@@ -37,11 +37,11 @@ import { UserIcon, CalendarIcon } from "@phosphor-icons/react";
 import { useMeeting } from "@/contexts/meeting-context";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TimePicker } from "@/components/ui/time-picker";
-import { cn } from "@/lib/utils";
-import { apiClient } from "@/lib/api-client";
+import { Calendar } from "@minutely/shared/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@minutely/shared/ui";
+import { TimePicker } from "@minutely/shared/ui";
+import { cn } from "@minutely/shared/utils";
+import { minutelyApi } from "@/lib/api-client";
 import { useEffect } from "react";
 
 
@@ -68,7 +68,7 @@ export default function StartMeetingPage() {
   const [upcomingMeetings, setUpcomingMeetings] = useState<any[]>([]);
 
   useEffect(() => {
-    apiClient("/api/meetings/next")
+    minutelyApi.getNextMeeting()
       .then((res) => res.json())
       .then((json) => {
         if (json && json.data) {
@@ -186,9 +186,7 @@ export default function StartMeetingPage() {
     }
 
     try {
-      const response = await apiClient("/api/meetings/instant", {
-        method: "POST"
-      });
+      const response = await minutelyApi.createInstantMeeting();
 
       const data = await response.json();
 

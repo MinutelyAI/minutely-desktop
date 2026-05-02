@@ -1,13 +1,12 @@
 import { useNavigate } from "react-router"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card"
-import { Field, FieldDescription, FieldGroup, FieldLabel, } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { cn } from "@minutely/shared/utils"
+import { Button } from "@minutely/shared/ui"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@minutely/shared/ui"
+import { Field, FieldDescription, FieldGroup, FieldLabel, } from "@minutely/shared/ui"
+import { Input } from "@minutely/shared/ui"
 import { useState } from "react"
 import { BadgeAlert } from "lucide-react"
-
-const API_URL = import.meta.env.VITE_BACKEND;
+import { minutelyApi } from "@/lib/api-client"
 
 export function LoginForm({
   className,
@@ -53,15 +52,9 @@ export function LoginForm({
     try {
       setLoading(true)
 
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
+      const res = await minutelyApi.login({
+        email: form.email,
+        password: form.password,
       })
 
       const data = await res.json()

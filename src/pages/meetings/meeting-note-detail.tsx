@@ -8,10 +8,10 @@ import {
   Users,
 } from "lucide-react";
 import { meetingNotes } from "@/mock";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@minutely/shared/ui";
+import { Button } from "@minutely/shared/ui";
+import { CardDescription } from "@minutely/shared/ui";
+import { Separator } from "@minutely/shared/ui";
 import { MeetingActionItem } from "@/types";
 
 export default function MeetingNoteDetailPage() {

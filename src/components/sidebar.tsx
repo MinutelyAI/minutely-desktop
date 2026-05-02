@@ -1,6 +1,6 @@
 import { Calendar, NotepadText, Command, Plus as NewMeeting, MessageSquare, Users, Archive, Trash, Settings, } from "lucide-react"
 import { Link } from "react-router-dom"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, } from "@minutely/shared/ui"
 
 import NavUser from "@/components/nav-user"
 import { Nav, User } from "@/types"

@@ -18,19 +18,19 @@ import {
   AvatarFallback,
   AvatarGroup,
   AvatarGroupCount,
-} from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "@minutely/shared/ui"
+import { Badge } from "@minutely/shared/ui"
+import { Button } from "@minutely/shared/ui"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+} from "@minutely/shared/ui"
+import { Input } from "@minutely/shared/ui"
+import { Textarea } from "@minutely/shared/ui"
+import { cn } from "@minutely/shared/utils"
 
 type Message = {
   id: number

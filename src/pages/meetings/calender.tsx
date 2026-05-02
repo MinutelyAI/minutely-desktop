@@ -9,18 +9,18 @@ import {
 } from "lucide-react";
 import { meetingNotes } from "@/mock";
 import { useMeeting } from "@/contexts/meeting-context";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Toggle } from "@/components/ui/toggle";
+import { Badge } from "@minutely/shared/ui";
+import { Button } from "@minutely/shared/ui";
+import { CardTitle } from "@minutely/shared/ui";
+import { Separator } from "@minutely/shared/ui";
+import { Toggle } from "@minutely/shared/ui";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@minutely/shared/ui";
 import { MeetingNotes, ScheduledMeeting } from "@/types";
 import { BellAlertIcon } from "@heroicons/react/24/outline";
 import {
@@ -32,9 +32,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@minutely/shared/ui"
+import { Label } from "@minutely/shared/ui";
+import { Textarea } from "@minutely/shared/ui";
 
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const reminderOptions = ["10 minutes", "30 minutes", "1 hour", "1 day"];

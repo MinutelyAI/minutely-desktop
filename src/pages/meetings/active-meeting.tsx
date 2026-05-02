@@ -3,15 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useMeeting } from '@/contexts/meeting-context';
 import { useMediaStream, useParticipantStreams } from '@/hooks/use-media-stream';
 import { useWebRTC } from '@/hooks/use-webrtc';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarGroup } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@minutely/shared/ui';
+import { Button } from '@minutely/shared/ui';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@minutely/shared/ui';
+import { Avatar, AvatarFallback, AvatarGroup } from '@minutely/shared/ui';
+import { Badge } from '@minutely/shared/ui';
+import { Separator } from '@minutely/shared/ui';
+import { Label } from '@minutely/shared/ui';
 import { formatMeetingCode } from '@/lib/meeting-utils';
 import { getMeetingPeerEmail } from '@/lib/participant-identity';
+import { apiBaseUrl, minutelyApi } from '@/lib/api-client';
 import { VideoGrid } from '@/components/video-grid';
 import {
   Mic,
@@ -24,8 +25,6 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_BACKEND;
 
 const toDisplayName = (email: string) =>
   email
@@ -100,7 +99,7 @@ export default function ActiveMeetingPage() {
       displayName: participant.displayName,
     })),
     token,
-    apiUrl: API_URL,
+    apiUrl: apiBaseUrl,
     onUnauthorized: handleUnauthorized,
   });
 
@@ -113,7 +112,7 @@ export default function ActiveMeetingPage() {
   }));
 
   useEffect(() => {
-    if (!activeMeeting || !API_URL) {
+    if (!activeMeeting) {
       return;
     }
 
@@ -124,14 +123,7 @@ export default function ActiveMeetingPage() {
 
     const fetchParticipants = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/api/meetings/participants?id=${encodeURIComponent(activeMeeting.id)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await minutelyApi.getMeetingParticipants(activeMeeting.id);
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -159,7 +151,7 @@ export default function ActiveMeetingPage() {
   }, [activeMeeting?.id]);
 
   useEffect(() => {
-    if (!activeMeeting || !API_URL) {
+    if (!activeMeeting) {
       return;
     }
 
@@ -171,19 +163,12 @@ export default function ActiveMeetingPage() {
 
     const syncState = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/meetings/participant/state`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            meeting_id: activeMeeting.id,
-            email,
-            has_joined: true,
-            audio_enabled: micEnabled,
-            video_enabled: videoEnabled,
-          }),
+        const response = await minutelyApi.updateParticipantState({
+          meeting_id: activeMeeting.id,
+          email,
+          has_joined: true,
+          audio_enabled: micEnabled,
+          video_enabled: videoEnabled,
         });
 
         if (!response.ok) {
