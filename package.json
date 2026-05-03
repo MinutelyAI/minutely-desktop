@@ -46,7 +46,7 @@
     "vite": "^5.4.21"
   },
   "dependencies": {
-    "@minutely/shared": "^0.1.0",
+    "@minutely/shared": "file:../minutely-shared",
     "@base-ui/react": "^1.2.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@heroicons/react": "^2.2.0",
